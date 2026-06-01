@@ -1,0 +1,2600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lockd — Product Spec & Design Brief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@200;300;400;500;600;700&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.40.0/tabler-icons.min.css" />
+<style>
+:root {
+  --bg: #0A0420;
+  --bg-deep: #120832;
+  --bg-elev: #1A0F3D;
+  --bg-card: #221547;
+  --border: rgba(180, 160, 255, 0.10);
+  --border-strong: rgba(180, 160, 255, 0.20);
+  --text: #F0EAFF;
+  --text-muted: #9B92C9;
+  --text-dim: #6B6299;
+  --text-faint: #443D6E;
+
+  --sage: #A8D5BA;
+  --coral: #FF7A6E;
+  --amber: #F5B547;
+  --cyan: #6FC8E8;
+  --violet: #B47CFF;
+  --pink: #FF6BCB;
+
+  --violet-soft: rgba(180, 124, 255, 0.14);
+  --sage-soft: rgba(168, 213, 186, 0.12);
+  --coral-soft: rgba(255, 122, 110, 0.14);
+  --amber-soft: rgba(245, 181, 71, 0.14);
+  --cyan-soft: rgba(111, 200, 232, 0.14);
+  --pink-soft: rgba(255, 107, 203, 0.14);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: 'Geist', -apple-system, sans-serif;
+  background:
+    radial-gradient(ellipse 1200px 800px at 100% 0%, rgba(180, 124, 255, 0.12), transparent 55%),
+    radial-gradient(ellipse 1000px 700px at 0% 100%, rgba(255, 107, 203, 0.06), transparent 60%),
+    linear-gradient(165deg, var(--bg-deep) 0%, var(--bg) 100%);
+  background-attachment: fixed;
+  color: var(--text);
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+.wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 80px 32px 120px;
+}
+
+/* ---------- HERO ---------- */
+.doc-hero {
+  text-align: center;
+  padding: 40px 0 64px;
+  border-bottom: 0.5px solid var(--border);
+  margin-bottom: 64px;
+}
+
+.doc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: var(--violet-soft);
+  border: 0.5px solid var(--border-strong);
+  border-radius: 100px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin-bottom: 28px;
+}
+
+.brand-mark-lg {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--violet), var(--pink));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 30px;
+  margin-bottom: 24px;
+  box-shadow: 0 12px 40px rgba(180, 124, 255, 0.4);
+}
+
+.doc-hero h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 64px;
+  font-weight: 400;
+  margin: 0 0 12px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.doc-hero .tagline {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 22px;
+  color: var(--text-muted);
+  margin: 0 0 24px;
+}
+
+.doc-hero .meta {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+
+/* ---------- SECTIONS ---------- */
+section { margin-bottom: 64px; }
+
+.sec-num {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  color: var(--violet);
+  letter-spacing: 0.2em;
+  margin-bottom: 8px;
+}
+
+h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 36px;
+  font-weight: 400;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
+
+.sec-intro {
+  color: var(--text-muted);
+  font-size: 16px;
+  margin: 0 0 28px;
+  max-width: 620px;
+}
+
+h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 32px 0 12px;
+  color: var(--text);
+}
+
+p { color: var(--text-muted); }
+strong { color: var(--text); font-weight: 600; }
+
+/* ---------- CARDS ---------- */
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent), var(--bg-elev);
+  border: 0.5px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin: 20px 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.card-accent {
+  border-left: 3px solid var(--violet);
+}
+
+.quote-card {
+  background: var(--violet-soft);
+  border: 0.5px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin: 20px 0;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 19px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* ---------- LISTS ---------- */
+ul.clean { list-style: none; padding: 0; margin: 16px 0; }
+ul.clean li {
+  position: relative;
+  padding: 8px 0 8px 28px;
+  color: var(--text-muted);
+  border-bottom: 0.5px solid var(--border);
+}
+ul.clean li:last-child { border-bottom: none; }
+ul.clean li::before {
+  content: '';
+  position: absolute;
+  left: 4px; top: 16px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--violet);
+  box-shadow: 0 0 8px rgba(180,124,255,0.5);
+}
+
+ul.check { list-style: none; padding: 0; margin: 16px 0; }
+ul.check li {
+  position: relative;
+  padding: 8px 0 8px 30px;
+  color: var(--text-muted);
+}
+ul.check li::before {
+  content: '\2713';
+  position: absolute;
+  left: 4px; top: 8px;
+  color: var(--sage);
+  font-weight: 600;
+}
+
+/* ---------- TABLE ---------- */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 14px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 0.5px solid var(--border);
+}
+.tbl th {
+  background: var(--bg-card);
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-family: 'Geist Mono', monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.tbl td {
+  padding: 14px 16px;
+  border-top: 0.5px solid var(--border);
+  color: var(--text-muted);
+  vertical-align: top;
+}
+.tbl td strong { color: var(--text); }
+
+.pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-family: 'Geist Mono', monospace;
+  font-weight: 500;
+}
+.pill.green { background: var(--sage-soft); color: var(--sage); }
+.pill.red { background: var(--coral-soft); color: var(--coral); }
+.pill.amber { background: var(--amber-soft); color: var(--amber); }
+.pill.violet { background: var(--violet-soft); color: var(--violet); }
+
+/* ---------- COLOR SWATCHES ---------- */
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 20px 0;
+}
+.swatch {
+  border-radius: 12px;
+  padding: 16px;
+  border: 0.5px solid var(--border);
+  background: var(--bg-elev);
+}
+.swatch-chip {
+  width: 100%;
+  height: 48px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.swatch-name { font-size: 13px; font-weight: 500; margin: 0 0 2px; }
+.swatch-hex {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.swatch-use { font-size: 11px; color: var(--text-dim); margin: 4px 0 0; }
+
+/* ---------- TYPE SPECIMENS ---------- */
+.type-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 0.5px solid var(--border);
+}
+.type-row:last-child { border-bottom: none; }
+.type-tag {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  width: 110px;
+  flex-shrink: 0;
+}
+
+/* ---------- TWO COL ---------- */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 640px) {
+  .two-col, .swatch-grid { grid-template-columns: 1fr; }
+  .doc-hero h1 { font-size: 44px; }
+}
+
+.theme-box {
+  border-radius: 14px;
+  padding: 22px;
+  border: 0.5px solid var(--border);
+}
+.theme-box h4 {
+  font-size: 15px;
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+.theme-box p { font-size: 13px; margin: 0; }
+
+/* ---------- SCREEN FLOW ---------- */
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 24px 0;
+}
+.flow-step {
+  background: var(--bg-card);
+  border: 0.5px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.flow-arrow { color: var(--violet); font-size: 18px; }
+
+/* ---------- CALLOUT ---------- */
+.callout {
+  display: flex;
+  gap: 14px;
+  background: var(--amber-soft);
+  border: 0.5px solid rgba(245, 181, 71, 0.3);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin: 20px 0;
+}
+.callout i { color: var(--amber); font-size: 22px; flex-shrink: 0; }
+.callout p { margin: 0; font-size: 14px; }
+
+.callout.danger {
+  background: var(--coral-soft);
+  border-color: rgba(255, 122, 110, 0.3);
+}
+.callout.danger i { color: var(--coral); }
+
+/* ---------- TOC ---------- */
+.toc {
+  background: var(--bg-elev);
+  border: 0.5px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 64px;
+}
+.toc-title {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 0 0 16px;
+}
+.toc a {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-bottom: 0.5px solid var(--border);
+  font-size: 14px;
+  transition: color 0.15s;
+}
+.toc a:last-child { border-bottom: none; }
+.toc a:hover { color: var(--violet); }
+.toc a .n { font-family: 'Geist Mono', monospace; color: var(--text-faint); }
+
+footer {
+  text-align: center;
+  padding-top: 48px;
+  border-top: 0.5px solid var(--border);
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+/* ---------- EMBEDDED MOCKUP FRAMES ---------- */
+.mockup-embed {
+  margin: 24px 0;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 0.5px solid var(--border-strong);
+  box-shadow: 0 16px 50px rgba(0,0,0,0.4);
+  background: #0A0420;
+}
+.mockup-embed-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border-bottom: 0.5px solid var(--border);
+}
+.mockup-embed-bar .dots { display: flex; gap: 6px; }
+.mockup-embed-bar .dots span { width: 11px; height: 11px; border-radius: 50%; display: block; }
+.mockup-embed-bar .dots .r { background: #FF5F57; }
+.mockup-embed-bar .dots .y { background: #FEBC2E; }
+.mockup-embed-bar .dots .g { background: #28C840; }
+.mockup-embed-bar .title {
+  font-family: 'Geist Mono', monospace; font-size: 11px;
+  color: var(--text-dim); letter-spacing: 0.05em; margin-left: 8px;
+}
+.mockup-embed-bar .hint {
+  margin-left: auto; font-family: 'Geist Mono', monospace; font-size: 10px;
+  color: var(--violet); letter-spacing: 0.05em;
+}
+.mockup-embed iframe {
+  width: 100%;
+  border: none;
+  display: block;
+  background: #0A0420;
+}
+.mockup-caption {
+  font-size: 13px; color: var(--text-dim); margin: 8px 0 0; text-align: center;
+  font-style: italic; font-family: 'Instrument Serif', serif;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HERO -->
+<div class="doc-hero">
+  <div class="doc-badge"><i class="ti ti-file-text"></i> Product Spec · v0.1</div>
+  <div><div class="brand-mark-lg"><i class="ti ti-focus-2"></i></div></div>
+  <h1>Lockd</h1>
+  <p class="tagline">Your study dashboard that locks you in.</p>
+  <p class="meta">Working name · Desktop focus app · Windows-first · Built on Tauri</p>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <p class="toc-title">Contents</p>
+  <a href="#problem"><span>The problem</span><span class="n">01</span></a>
+  <a href="#idea"><span>The idea</span><span class="n">02</span></a>
+  <a href="#reality"><span>Reality check — grilling the idea</span><span class="n">03</span></a>
+  <a href="#audience"><span>Who it's for</span><span class="n">04</span></a>
+  <a href="#how"><span>How it works — the core loop</span><span class="n">05</span></a>
+  <a href="#modes"><span>Calm Mode &amp; Command Mode</span><span class="n">06</span></a>
+  <a href="#features"><span>Feature scope</span><span class="n">07</span></a>
+  <a href="#design"><span>Design direction</span><span class="n">08</span></a>
+  <a href="#system"><span>Design system</span><span class="n">09</span></a>
+  <a href="#screens"><span>Screens</span><span class="n">10</span></a>
+  <a href="#tech"><span>Technical approach</span><span class="n">11</span></a>
+  <a href="#open"><span>Open questions</span><span class="n">12</span></a>
+  <a href="#roadmap"><span>Roadmap</span><span class="n">13</span></a>
+</div>
+
+<!-- 01 PROBLEM -->
+<section id="problem">
+  <p class="sec-num">01</p>
+  <h2>The problem</h2>
+  <p class="sec-intro">The thing this app exists to kill.</p>
+
+  <div class="quote-card">
+    "Every time I'm working in VS Code, I run a command, and while it executes I open Instagram Reels or YouTube. My brain drains faster, and I lose the thread of what I was doing."
+  </div>
+
+  <p>This is <strong>context-switch addiction</strong>. The dead moments in deep work — a compile, a test run, a moment of being stuck — are exactly when the brain reaches for a dopamine hit. The cost isn't just the minutes lost to scrolling; it's the re-entry tax of rebuilding focus afterward, which can take 15–20 minutes each time.</p>
+
+  <p>The problem is real, common, and well-documented. It is worth solving.</p>
+</section>
+
+<!-- 02 IDEA -->
+<section id="idea">
+  <p class="sec-num">02</p>
+  <h2>The idea</h2>
+  <p class="sec-intro">A Pomodoro timer fused with a focus-state lock.</p>
+
+  <p>A desktop app where you define a focus session — for example, 4 hours — broken into work/break intervals (50 min work, 10 min break). During <strong>work blocks</strong>, everything is locked except a whitelist of apps and websites you explicitly allow. During <strong>break blocks</strong>, everything unlocks and a visible clock counts down your rest. When the break ends, work mode resumes automatically.</p>
+
+  <h3>The defining mechanics</h3>
+  <ul class="clean">
+    <li><strong>Whitelist, not blacklist.</strong> You define what's <em>allowed</em> (VS Code, Blender, specific sites) — everything else is blocked by default.</li>
+    <li><strong>Per-session intent.</strong> Each session names what you're working on, so the lock adapts to the task (coding vs. studying vs. 3D work).</li>
+    <li><strong>Channel-level web allowlist.</strong> Not just "block YouTube" — allow <em>one specific channel</em> (e.g. a lofi stream) while blocking the rest.</li>
+    <li><strong>Freedom as reward.</strong> Breaks are fully unlocked. The break clock is large and unavoidable, so rest feels earned, not stolen.</li>
+  </ul>
+</section>
+
+<!-- 03 REALITY CHECK -->
+<section id="reality">
+  <p class="sec-num">03</p>
+  <h2>Reality check</h2>
+  <p class="sec-intro">We grilled the idea against the market and real-world behavior before committing. Here's the honest assessment.</p>
+
+  <h3>It already exists — and the best ones are ruthless</h3>
+  <p>Cold Turkey, Freedom, and FocusMe already occupy this space. Cold Turkey is the "nuclear option": once a block starts, there's no way out — you can't uninstall, restart, or talk your way past it. Freedom syncs blocklists across Mac, Windows, iOS, Android, and Chrome.</p>
+  <p><strong>What's missing from them:</strong> personal context-awareness (knowing you're in VS Code), per-app focus modes, channel-level allowlists, and — critically — <strong>a UI good enough to want on your screen.</strong></p>
+
+  <table class="tbl">
+    <tr><th>Dimension</th><th>Assessment</th></tr>
+    <tr><td><strong>Problem validity</strong></td><td><span class="pill green">Strong</span> A real, widespread pain.</td></tr>
+    <tr><td><strong>Technical feasibility</strong></td><td><span class="pill amber">Medium</span> Blocking is solvable; circumvention-proofing is the hard part.</td></tr>
+    <tr><td><strong>Market uniqueness</strong></td><td><span class="pill amber">Contested</span> Cold Turkey + Freedom cover ~80%. Differentiation must come from UX + context-awareness.</td></tr>
+    <tr><td><strong>The real moat</strong></td><td><span class="pill violet">Design</span> The aesthetic-study niche is underserved by ugly, utilitarian blockers.</td></tr>
+  </table>
+
+  <div class="callout danger">
+    <i class="ti ti-alert-triangle"></i>
+    <p><strong>The retention trap.</strong> Research across 525,000 users found a median of ~70% abandon productivity apps within the first few weeks. The escape hatch is the killer: any easy "pause" button <em>will</em> be used. The app must be firm — one deliberately annoying exit, not a soft off-switch.</p>
+  </div>
+
+  <div class="callout">
+    <i class="ti ti-bulb"></i>
+    <p><strong>The phone gap.</strong> A desktop app can't touch your phone — where much doom-scrolling actually happens. Out of scope for v1, but it's the honest limitation and the eventual opportunity (phone pairing).</p>
+  </div>
+</section>
+
+<!-- 04 AUDIENCE -->
+<section id="audience">
+  <p class="sec-num">04</p>
+  <h2>Who it's for</h2>
+  <p class="sec-intro">Not "everyone who procrastinates." A specific, reachable crowd.</p>
+
+  <div class="card card-accent">
+    <h3 style="margin-top:0;">The aesthetic study crowd</h3>
+    <p>Students, self-learners, indie devs, and creatives who care that their tools <strong>look good on screen</strong> — the people who post their desk setups, share their study tools, and live in dark mode with lofi playing. They will screenshot a beautiful focus timer and share it. That sharing <em>is</em> the distribution.</p>
+  </div>
+
+  <p><strong>Deliberately NOT targeting:</strong> the cute/cozy cottagecore aesthetic (mascots, illustrated forests, "good job!" affirmations). The taste here is <em>a serious tool that happens to be beautiful</em> — closer to Linear, Arc, and Things 3 than to Forest or a Notion template.</p>
+
+  <h3>Positioning shift we made consciously</h3>
+  <table class="tbl">
+    <tr><th>Started as</th><th>Evolved into</th></tr>
+    <tr><td>A calm, minimal, single-purpose focus timer</td><td>A gamified study dashboard that locks you in</td></tr>
+    <tr><td>Smaller, quieter market</td><td>Bigger but more crowded market (vs. Notion, Habitica, Forest)</td></tr>
+  </table>
+</section>
+
+<!-- 05 HOW IT WORKS -->
+<section id="how">
+  <p class="sec-num">05</p>
+  <h2>How it works</h2>
+  <p class="sec-intro">The core loop, start to finish.</p>
+
+  <div class="flow">
+    <div class="flow-step">Dashboard</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step">Plan session</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step">Work (locked)</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step">Break (unlocked)</div>
+    <span class="flow-arrow">↺</span>
+    <div class="flow-step">Repeat → Session end</div>
+  </div>
+
+  <table class="tbl">
+    <tr><th>Phase</th><th>What happens</th></tr>
+    <tr><td><strong>Setup</strong></td><td>Pick total duration (1/2/4/6 hr), work/break rhythm (e.g. 50/10), name your focus intent, and confirm the allowlist of apps + sites.</td></tr>
+    <tr><td><strong>Work block</strong></td><td>Distracting apps and sites are blocked. Only the allowlist works. A large timer counts down. The block cannot be casually exited.</td></tr>
+    <tr><td><strong>Break block</strong></td><td>Everything unlocks. A big, visible clock counts down the break so its ending is <em>felt</em>, not missed in a tray notification.</td></tr>
+    <tr><td><strong>Resume</strong></td><td>When the break ends, work mode re-locks automatically. Loop continues until the session completes.</td></tr>
+    <tr><td><strong>Session end</strong></td><td>Stats roll up: blocks completed, focus time logged, distractions blocked, XP earned.</td></tr>
+  </table>
+</section>
+
+<!-- 06 TWO MODES -->
+<section id="modes">
+  <p class="sec-num">06</p>
+  <h2>Calm Mode &amp; Command Mode</h2>
+  <p class="sec-intro">The same session, the same lock — two personalities. The user picks the one that matches how they work, or how they feel that day.</p>
+
+  <p>This came out of a simple observation: a big, ever-present clock makes some people work harder — the <strong>visible-progress effect</strong>, where tangible, always-on effort drives output. But the same density that motivates one person overwhelms another. So instead of guessing, we let the user choose the surface.</p>
+
+  <div class="two-col">
+    <div class="theme-box" style="background: linear-gradient(160deg, #1A0F3D, #120832);">
+      <h4 style="color:#F0EAFF;">🌙 Calm Mode</h4>
+      <p style="color:#9B92C9;">One thing at a time. A huge 180px timer, generous empty space, distractions hidden. The zen-study philosophy — nothing on screen but the work and the time. The default.</p>
+    </div>
+    <div class="theme-box" style="background: linear-gradient(160deg, #221547, #1A0F3D);">
+      <h4 style="color:#F0EAFF;">🛰️ Command Mode</h4>
+      <p style="color:#9B92C9;">Mission control. The timer sits center stage, flanked by live-ticking stats, today's blocks chart, XP earned, and a focus wall filling in real time. Everything visible at once — the momentum made tangible.</p>
+    </div>
+  </div>
+
+  <h3>What's in Command Mode</h3>
+  <ul class="clean">
+    <li><strong>Center timer</strong> with a count direction toggle — <em>time left</em> (countdown urgency) or <em>focused</em> (count-up reward). User's choice.</li>
+    <li><strong>Live session stats</strong> — focused-today as an accumulating clock, day streak, distractions blocked, all ticking in real time.</li>
+    <li><strong>Today's blocks chart</strong> — a small bar chart of blocks done vs. planned.</li>
+    <li><strong>XP &amp; level</strong> — XP earned this session with the progress bar toward the next level.</li>
+    <li><strong>The focus wall</strong> — a 28-day contribution-graph grid where brighter cells mean more focus. "Today is brightest" is the reward you chase.</li>
+  </ul>
+
+  <h3>The floating mini timer (both modes)</h3>
+  <p>An optional always-on-top pill — just the block countdown and a live dot — that sits over VS Code or Blender while you work. This is the piece that's actually visible during deep work, since you won't be looking at any full Lockd screen. It's the glanceable clock from the "wall of monitors" setups, distilled to one honest signal: how long until your break.</p>
+
+  <div class="callout danger">
+    <i class="ti ti-alert-triangle"></i>
+    <p><strong>The tension to respect.</strong> Calm Mode says "hide everything, just focus." Command Mode says "show everything, feel the momentum." They're philosophically opposite — and Command Mode risks becoming a distraction itself (live-ticking stats while you should be heads-down). The design rule: motion in Command Mode stays slow and peripheral; the focus wall and stats update between glances, never demand them.</p>
+  </div>
+
+  <div class="callout">
+    <i class="ti ti-bulb"></i>
+    <p><strong>Why ship both.</strong> It resolves the old "calm or vibrant timer?" question by handing it to the user, and it makes a stronger pitch — one app that flexes from monk-mode to mission-control. The cost is real (two full surfaces to design and maintain), so the floating mini timer may end up the most-used piece of all.</p>
+  </div>
+</section>
+
+<!-- 07 FEATURES -->
+<section id="features">
+  <p class="sec-num">07</p>
+  <h2>Feature scope</h2>
+  <p class="sec-intro">What's in v1, and what waits.</p>
+
+  <h3>v1 — core</h3>
+  <ul class="check">
+    <li>Session setup: duration, work/break rhythm, focus intent</li>
+    <li>Whitelist of allowed apps (select from installed apps)</li>
+    <li>Web allowlist with channel-level granularity (e.g. one YouTube channel)</li>
+    <li>Work-mode lock that blocks everything outside the allowlist</li>
+    <li>Break mode with large, unavoidable countdown</li>
+    <li>Calm Mode &amp; Command Mode work surfaces (user-switchable)</li>
+    <li>Floating always-on-top mini timer with count up/down toggle</li>
+    <li>Focus wall (contribution-graph grid) in Command Mode</li>
+    <li>One deliberately-annoying early exit (not a soft pause)</li>
+    <li>Dashboard with gamified stats</li>
+    <li>Dark + light themes</li>
+  </ul>
+
+  <h3>Gamification (all five, on the dashboard)</h3>
+  <div class="two-col">
+    <div class="card" style="margin:8px 0;"><strong>🔥 Day streak</strong><p style="font-size:13px;margin:4px 0 0;">Consecutive days with a completed session.</p></div>
+    <div class="card" style="margin:8px 0;"><strong>⏱️ Focus this week</strong><p style="font-size:13px;margin:4px 0 0;">Total hours logged, with week-over-week trend.</p></div>
+    <div class="card" style="margin:8px 0;"><strong>✅ Sessions today</strong><p style="font-size:13px;margin:4px 0 0;">Completed vs. planned for the day.</p></div>
+    <div class="card" style="margin:8px 0;"><strong>🛡️ Distractions blocked</strong><p style="font-size:13px;margin:4px 0 0;">Count of attempts intercepted — the satisfying number.</p></div>
+  </div>
+  <div class="card"><strong>⚡ Level &amp; XP</strong><p style="font-size:13px;margin:4px 0 0;">XP earned per focus block; levels with names ("Flow Master"). Progress bar toward next level on the dashboard.</p></div>
+
+  <h3>Later — v1.1+</h3>
+  <ul class="clean">
+    <li>Phone pairing (the real gap in the market)</li>
+    <li>Context-aware locking (allowlist changes based on the foreground app)</li>
+    <li>History &amp; goals views, schedules</li>
+    <li>Cross-platform (macOS)</li>
+  </ul>
+</section>
+
+<!-- 08 DESIGN DIRECTION -->
+<section id="design">
+  <p class="sec-num">08</p>
+  <h2>Design direction</h2>
+  <p class="sec-intro">How we arrived at the look — and the references that shaped it.</p>
+
+  <p>We worked through Dribbble references and narrowed taste by what was <em>rejected</em> as much as what was chosen.</p>
+
+  <table class="tbl">
+    <tr><th>Reference</th><th>Verdict &amp; why</th></tr>
+    <tr><td><strong>Valo</strong> (dark blue, soft glow)</td><td><span class="pill green">Liked</span> Atmospheric depth — dark but alive, frosted panels.</td></tr>
+    <tr><td><strong>Requo</strong> (minimal white, editorial)</td><td><span class="pill green">Liked</span> Clinical precision, every pixel earns its place.</td></tr>
+    <tr><td><strong>Timeyfi</strong> (illustrated, cozy greens)</td><td><span class="pill red">Rejected</span> Too cute. No mascots, no forests, no affirmations.</td></tr>
+    <tr><td><strong>CyberX</strong> (purple-navy, data viz)</td><td><span class="pill violet">Adopted → Dark</span> High-contrast, gradient depth, energizing.</td></tr>
+    <tr><td><strong>Noteflow</strong> (white, multi-color cards)</td><td><span class="pill violet">Adopted → Light</span> Bright, multi-accent, gamified card feel.</td></tr>
+  </table>
+
+  <h3>The two themes</h3>
+  <div class="two-col">
+    <div class="theme-box" style="background: linear-gradient(160deg, #1A0F3D, #120832);">
+      <h4 style="color:#F0EAFF;">◐ Dark — "CyberX"</h4>
+      <p style="color:#9B92C9;">Deep purple-to-navy gradient base. High contrast. Multi-color accent data. Glowing active states. The late-night study mode.</p>
+    </div>
+    <div class="theme-box" style="background:#FFFFFF;">
+      <h4 style="color:#1A1D21;">◑ Light — "Noteflow"</h4>
+      <p style="color:#5A6068;">Warm off-white. Multi-colored stat cards. Soft borders, no heavy shadows. Bright, energetic, daytime productivity.</p>
+    </div>
+  </div>
+  <p style="margin-top:16px;">The multi-color accent system carries across <strong>both</strong> themes — so dark mode isn't mono-sage; it gets the full colorful treatment too.</p>
+</section>
+
+<!-- 09 DESIGN SYSTEM -->
+<section id="system">
+  <p class="sec-num">09</p>
+  <h2>Design system</h2>
+  <p class="sec-intro">The tokens that make it cohesive.</p>
+
+  <h3>Accent palette</h3>
+  <div class="swatch-grid">
+    <div class="swatch"><div class="swatch-chip" style="background:#B47CFF;"></div><p class="swatch-name">Violet</p><p class="swatch-hex">#B47CFF</p><p class="swatch-use">Primary · level · CTA</p></div>
+    <div class="swatch"><div class="swatch-chip" style="background:#FF6BCB;"></div><p class="swatch-name">Pink</p><p class="swatch-hex">#FF6BCB</p><p class="swatch-use">Gradient pair · distractions</p></div>
+    <div class="swatch"><div class="swatch-chip" style="background:#A8D5BA;"></div><p class="swatch-name">Sage</p><p class="swatch-hex">#A8D5BA</p><p class="swatch-use">Break · success · allowed</p></div>
+    <div class="swatch"><div class="swatch-chip" style="background:#FF7A6E;"></div><p class="swatch-name">Coral</p><p class="swatch-hex">#FF7A6E</p><p class="swatch-use">Streak · warnings</p></div>
+    <div class="swatch"><div class="swatch-chip" style="background:#F5B547;"></div><p class="swatch-name">Amber</p><p class="swatch-hex">#F5B547</p><p class="swatch-use">Hours · limited state</p></div>
+    <div class="swatch"><div class="swatch-chip" style="background:#6FC8E8;"></div><p class="swatch-name">Cyan</p><p class="swatch-hex">#6FC8E8</p><p class="swatch-use">Sessions · info</p></div>
+  </div>
+
+  <h3>Dark surfaces</h3>
+  <div class="swatch-grid">
+    <div class="swatch"><div class="swatch-chip" style="background:#0A0420;border:0.5px solid var(--border);"></div><p class="swatch-name">Page</p><p class="swatch-hex">#0A0420</p></div>
+    <div class="swatch"><div class="swatch-chip" style="background:#1A0F3D;"></div><p class="swatch-name">Base / Elevated</p><p class="swatch-hex">#1A0F3D</p></div>
+    <div class="swatch"><div class="swatch-chip" style="background:#2B1B5A;"></div><p class="swatch-name">Card</p><p class="swatch-hex">#2B1B5A</p></div>
+  </div>
+
+  <h3>Typography</h3>
+  <div class="card">
+    <div class="type-row">
+      <span class="type-tag">DISPLAY</span>
+      <span style="font-family:'Instrument Serif',serif;font-size:32px;">Plan your next session</span>
+    </div>
+    <div class="type-row">
+      <span class="type-tag">SERIF / ITALIC</span>
+      <span style="font-family:'Instrument Serif',serif;font-style:italic;font-size:22px;color:var(--text-muted);">Step away. You earned it.</span>
+    </div>
+    <div class="type-row">
+      <span class="type-tag">UI / SANS</span>
+      <span style="font-family:'Geist',sans-serif;font-size:16px;">Geist — body, labels, buttons</span>
+    </div>
+    <div class="type-row">
+      <span class="type-tag">NUMERALS</span>
+      <span style="font-family:'Geist Mono',monospace;font-size:24px;letter-spacing:-0.02em;">37:24</span>
+    </div>
+    <div class="type-row">
+      <span class="type-tag">MICRO-LABEL</span>
+      <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.2em;color:var(--text-dim);">FOCUS LOCKED</span>
+    </div>
+  </div>
+  <p><strong>The rule:</strong> Instrument Serif for the one humanizing moment per screen. Geist for everything functional. Geist Mono for every number and uppercase micro-label — this is the "serious tool" voice.</p>
+</section>
+
+<!-- 10 SCREENS -->
+<section id="screens">
+  <p class="sec-num">10</p>
+  <h2>Screens</h2>
+  <p class="sec-intro">Six screens designed so far — embedded live below, interactive with theme toggles.</p>
+
+  <table class="tbl">
+    <tr><th>#</th><th>Screen</th><th>Role</th></tr>
+    <tr><td>01</td><td><strong>Dashboard</strong></td><td>Landing screen. Greeting, 4 stat cards, level/XP bar, weekly chart, today's plan. The screen that pulls users back.</td></tr>
+    <tr><td>02</td><td><strong>Session setup</strong></td><td>Duration pills, work/break rhythm, focus intent input, app + web allowlist.</td></tr>
+    <tr><td>03</td><td><strong>Work — Calm Mode</strong></td><td>Locked focus. 180px timer, status pill with live dot, count up/down toggle, block progress, single firm exit.</td></tr>
+    <tr><td>04</td><td><strong>Work — Command Mode</strong></td><td>Mission control. Center timer plus live stats, today's blocks chart, XP, and the 28-day focus wall.</td></tr>
+    <tr><td>05</td><td><strong>Break mode</strong></td><td>Unlocked. Sage-tinted timer, "everything unlocked," extend or skip options.</td></tr>
+    <tr><td>06</td><td><strong>Floating mini timer</strong></td><td>Always-on-top pill over your work app — block countdown + live dot. The only surface visible during deep work.</td></tr>
+  </table>
+
+  <div class="callout">
+    <i class="ti ti-device-desktop"></i>
+    <p>The work screen now ships in two switchable surfaces — Calm and Command — so the "how vibrant should the timer be?" question is answered by the user, not guessed at. Break mode stays a single calm screen. The dashboard carries the gamified energy.</p>
+  </div>
+
+  <h3>Live mockups — embedded</h3>
+  <p>The actual interactive UIs are embedded below. Both have a working dark / light theme toggle in the top-right. Scroll inside each frame.</p>
+
+  <div class="mockup-embed">
+    <div class="mockup-embed-bar">
+      <div class="dots"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+      <span class="title">lockd — full app · dashboard, setup, work, break</span>
+      <span class="hint">◐ / ◑ toggle inside →</span>
+    </div>
+    <iframe srcdoc="<!DOCTYPE html>
+<html lang=&quot;en&quot;>
+<head>
+<meta charset=&quot;UTF-8&quot; />
+<meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; />
+<title>Focus App — v3 Full Mockup</title>
+<link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot; />
+<link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin />
+<link href=&quot;https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Geist:wght@200;300;400;500;600;700&amp;family=Geist+Mono:wght@300;400;500&amp;display=swap&quot; rel=&quot;stylesheet&quot; />
+<link rel=&quot;stylesheet&quot; href=&quot;https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.40.0/tabler-icons.min.css&quot; />
+<style>
+/* ============================
+   DARK THEME — CYBERX VIBE
+   ============================ */
+:root[data-theme=&quot;dark&quot;] {
+  --bg-page: #0A0420;
+  --bg-deep: #120832;
+  --bg-base: #1A0F3D;
+  --bg-elev: #221547;
+  --bg-card: #2B1B5A;
+  --bg-card-hover: #34216B;
+  --bg-sidebar: #0F0628;
+
+  --border: rgba(180, 160, 255, 0.08);
+  --border-strong: rgba(180, 160, 255, 0.18);
+
+  --text: #F0EAFF;
+  --text-muted: #9B92C9;
+  --text-dim: #6B6299;
+  --text-faint: #443D6E;
+
+  /* multi-color accent system */
+  --acc-sage: #A8D5BA;
+  --acc-sage-soft: rgba(168, 213, 186, 0.12);
+  --acc-coral: #FF7A6E;
+  --acc-coral-soft: rgba(255, 122, 110, 0.14);
+  --acc-amber: #F5B547;
+  --acc-amber-soft: rgba(245, 181, 71, 0.14);
+  --acc-cyan: #6FC8E8;
+  --acc-cyan-soft: rgba(111, 200, 232, 0.14);
+  --acc-violet: #B47CFF;
+  --acc-violet-soft: rgba(180, 124, 255, 0.14);
+  --acc-pink: #FF6BCB;
+  --acc-pink-soft: rgba(255, 107, 203, 0.14);
+
+  --primary: var(--acc-violet);
+  --primary-soft: var(--acc-violet-soft);
+  --primary-glow: rgba(180, 124, 255, 0.4);
+}
+
+/* ============================
+   LIGHT THEME — NOTEFLOW VIBE
+   ============================ */
+:root[data-theme=&quot;light&quot;] {
+  --bg-page: #F6F4EE;
+  --bg-deep: #FFFFFF;
+  --bg-base: #FAFAF7;
+  --bg-elev: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FAFAF7;
+  --bg-sidebar: #FFFFFF;
+
+  --border: rgba(0, 0, 0, 0.06);
+  --border-strong: rgba(0, 0, 0, 0.12);
+
+  --text: #1A1D21;
+  --text-muted: #5A6068;
+  --text-dim: #8A9099;
+  --text-faint: #B0B5BC;
+
+  --acc-sage: #5A8A6C;
+  --acc-sage-soft: #E0EDE4;
+  --acc-coral: #FF6B5C;
+  --acc-coral-soft: #FFE4E0;
+  --acc-amber: #F59E0B;
+  --acc-amber-soft: #FEF2D8;
+  --acc-cyan: #2BA3D4;
+  --acc-cyan-soft: #DCF0F9;
+  --acc-violet: #8B5CF6;
+  --acc-violet-soft: #ECE3FE;
+  --acc-pink: #EC4899;
+  --acc-pink-soft: #FCE0EE;
+
+  --primary: #1A1D21;
+  --primary-soft: rgba(26, 29, 33, 0.05);
+  --primary-glow: rgba(0, 0, 0, 0.15);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Geist', -apple-system, sans-serif;
+  background: var(--bg-page);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background 0.3s;
+}
+
+body {
+  padding: 40px 24px;
+}
+
+/* THEME TOGGLE — fixed top right */
+.theme-toggle {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 100;
+  display: flex;
+  background: var(--bg-elev);
+  border: 0.5px solid var(--border-strong);
+  border-radius: 100px;
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+.theme-toggle button {
+  background: transparent;
+  border: none;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 100px;
+  font-family: inherit;
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+}
+.theme-toggle button.active {
+  background: var(--primary);
+  color: var(--bg-elev);
+}
+:root[data-theme=&quot;dark&quot;] .theme-toggle button.active {
+  color: var(--bg-deep);
+}
+
+.preview-container {
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.preview-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+.preview-header h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 36px;
+  font-weight: 400;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
+.preview-header p {
+  font-size: 13px;
+  margin: 0;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+
+.screen-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 0 0 16px;
+  font-weight: 500;
+  padding-left: 4px;
+}
+
+/* SCREEN CONTAINER */
+.screen {
+  background: var(--bg-page);
+  border-radius: 24px;
+  margin-bottom: 32px;
+  border: 0.5px solid var(--border);
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
+}
+
+:root[data-theme=&quot;dark&quot;] .screen {
+  background:
+    radial-gradient(ellipse 1000px 600px at 100% 0%, rgba(180, 124, 255, 0.18), transparent 60%),
+    radial-gradient(ellipse 800px 500px at 0% 100%, rgba(255, 107, 203, 0.08), transparent 65%),
+    linear-gradient(160deg, var(--bg-base) 0%, var(--bg-deep) 100%);
+}
+
+/* ============================
+   DASHBOARD SCREEN
+   ============================ */
+.dashboard {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 720px;
+}
+
+/* SIDEBAR */
+.sidebar {
+  background: var(--bg-sidebar);
+  border-right: 0.5px solid var(--border);
+  padding: 28px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+:root[data-theme=&quot;dark&quot;] .sidebar {
+  background: rgba(10, 4, 32, 0.5);
+  backdrop-filter: blur(20px);
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px 28px;
+  border-bottom: 0.5px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--acc-violet), var(--acc-pink));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.brand-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.nav-section {
+  margin-bottom: 24px;
+}
+.nav-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding: 0 12px;
+  margin-bottom: 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 2px;
+}
+.nav-item:hover {
+  background: var(--bg-elev);
+  color: var(--text);
+}
+.nav-item.active {
+  background: var(--primary-soft);
+  color: var(--text);
+  font-weight: 500;
+}
+:root[data-theme=&quot;dark&quot;] .nav-item.active {
+  background: var(--acc-violet-soft);
+  color: var(--acc-violet);
+  box-shadow: 0 0 20px rgba(180, 124, 255, 0.2);
+}
+.nav-item i { font-size: 16px; }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 0.5px solid var(--border);
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--acc-amber), var(--acc-coral));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 500;
+  font-size: 13px;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: 13px; font-weight: 500; margin: 0; }
+.user-meta { font-size: 11px; color: var(--text-dim); margin: 0; }
+
+/* MAIN CONTENT */
+.dashboard-main {
+  padding: 36px 40px;
+  overflow: hidden;
+}
+
+.dash-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.greeting h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 34px;
+  font-weight: 400;
+  margin: 0 0 6px;
+  letter-spacing: -0.02em;
+}
+.greeting p {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.cta-start {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  background: var(--primary);
+  color: var(--bg-deep);
+  border: none;
+  border-radius: 100px;
+  font-family: 'Geist', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 8px 24px var(--primary-glow);
+  transition: all 0.2s;
+}
+.cta-start:hover { transform: translateY(-1px); }
+
+:root[data-theme=&quot;dark&quot;] .cta-start {
+  background: linear-gradient(135deg, var(--acc-violet), var(--acc-pink));
+  color: white;
+}
+
+/* STAT CARDS GRID */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--bg-elev);
+  border: 0.5px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+.stat-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+}
+
+:root[data-theme=&quot;dark&quot;] .stat-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent), var(--bg-elev);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin-bottom: 14px;
+}
+.stat-icon.coral { background: var(--acc-coral-soft); color: var(--acc-coral); }
+.stat-icon.amber { background: var(--acc-amber-soft); color: var(--acc-amber); }
+.stat-icon.cyan { background: var(--acc-cyan-soft); color: var(--acc-cyan); }
+.stat-icon.sage { background: var(--acc-sage-soft); color: var(--acc-sage); }
+.stat-icon.violet { background: var(--acc-violet-soft); color: var(--acc-violet); }
+.stat-icon.pink { background: var(--acc-pink-soft); color: var(--acc-pink); }
+
+.stat-value {
+  font-family: 'Geist Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.stat-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  margin-top: 8px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-family: 'Geist Mono', monospace;
+}
+.stat-trend.up { background: var(--acc-sage-soft); color: var(--acc-sage); }
+.stat-trend.down { background: var(--acc-coral-soft); color: var(--acc-coral); }
+
+/* LEVEL BAR */
+.level-section {
+  background: var(--bg-elev);
+  border: 0.5px solid var(--border);
+  border-radius: 16px;
+  padding: 22px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+:root[data-theme=&quot;dark&quot;] .level-section {
+  background:
+    radial-gradient(ellipse 400px 200px at 0% 50%, var(--acc-violet-soft), transparent 70%),
+    var(--bg-elev);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.level-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--acc-violet), var(--acc-pink));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: 'Instrument Serif', serif;
+  font-size: 22px;
+  box-shadow: 0 8px 20px var(--primary-glow);
+  flex-shrink: 0;
+}
+
+.level-info { flex: 1; }
+.level-title {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0 0 4px;
+}
+.level-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+}
+
+.xp-bar {
+  height: 6px;
+  background: var(--bg-card);
+  border-radius: 100px;
+  overflow: hidden;
+  position: relative;
+}
+.xp-bar-fill {
+  height: 100%;
+  width: 68%;
+  background: linear-gradient(90deg, var(--acc-violet), var(--acc-pink));
+  border-radius: 100px;
+  box-shadow: 0 0 12px var(--primary-glow);
+}
+
+.xp-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+/* BOTTOM GRID — chart + activity */
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 20px;
+}
+
+.panel {
+  background: var(--bg-elev);
+  border: 0.5px solid var(--border);
+  border-radius: 16px;
+  padding: 22px;
+}
+:root[data-theme=&quot;dark&quot;] .panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent), var(--bg-elev);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.panel-title {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0;
+}
+.panel-meta {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* BAR CHART */
+.chart-area {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 160px;
+  padding: 0 4px;
+}
+.bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.bar {
+  width: 100%;
+  background: var(--acc-violet-soft);
+  border-radius: 6px 6px 0 0;
+  position: relative;
+  transition: all 0.2s;
+}
+.bar:hover { background: var(--acc-violet); }
+.bar.today {
+  background: linear-gradient(180deg, var(--acc-violet), var(--acc-pink));
+  box-shadow: 0 4px 12px var(--primary-glow);
+}
+.bar-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+.bar-col.today .bar-label {
+  color: var(--acc-violet);
+  font-weight: 500;
+}
+
+/* TODAY'S PLAN */
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 0.5px solid var(--border);
+}
+.task-item:last-child { border-bottom: none; }
+
+.task-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.task-status.done {
+  background: var(--acc-sage);
+  box-shadow: 0 0 8px rgba(168, 213, 186, 0.5);
+}
+.task-status.active {
+  background: var(--acc-amber);
+  box-shadow: 0 0 8px rgba(245, 181, 71, 0.5);
+}
+.task-status.pending {
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+}
+
+.task-text { flex: 1; font-size: 13px; }
+.task-text.done { color: var(--text-dim); text-decoration: line-through; }
+.task-time {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* ============================
+   SESSION SETUP SCREEN
+   ============================ */
+.setup-screen {
+  padding: 56px;
+  position: relative;
+}
+
+.setup-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 38px;
+  font-weight: 400;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+  position: relative;
+  z-index: 2;
+}
+.setup-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0 0 36px;
+  position: relative;
+  z-index: 2;
+}
+
+.setup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  position: relative;
+  z-index: 2;
+}
+
+.field-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 0 0 12px;
+  font-weight: 500;
+}
+
+.btn-pill-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.btn-pill {
+  flex: 1;
+  padding: 12px;
+  background: var(--bg-elev);
+  border: 0.5px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 10px;
+  font-family: 'Geist', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-pill:hover { border-color: var(--border-strong); }
+.btn-pill.active {
+  background: var(--acc-violet-soft);
+  border-color: var(--acc-violet);
+  color: var(--acc-violet);
+  font-weight: 500;
+}
+
+.rhythm-card {
+  background: var(--bg-elev);
+  border: 0.5px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 24px;
+}
+.rhythm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+}
+.rhythm-row + .rhythm-row {
+  padding-top: 14px;
+  border-top: 0.5px solid var(--border);
+  margin-top: 8px;
+}
+
+.input-text {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-elev);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: 'Geist', sans-serif;
+  font-size: 14px;
+  outline: none;
+}
+.input-text:focus {
+  border-color: var(--acc-violet);
+  box-shadow: 0 0 0 3px var(--acc-violet-soft);
+}
+
+.allow-card {
+  background: var(--bg-elev);
+  border: 0.5px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.allow-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  background: var(--bg-card);
+  border-radius: 10px;
+  border: 0.5px solid var(--border);
+  margin-bottom: 8px;
+}
+.app-icon-sm {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.section-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin: 16px 0 10px;
+  letter-spacing: 0.12em;
+}
+.section-label:first-child { margin-top: 0; }
+
+.tag {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+}
+.tag.allow { color: var(--acc-sage); }
+.tag.limit { color: var(--acc-amber); }
+
+.dot-glow {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--acc-sage);
+  box-shadow: 0 0 10px rgba(168, 213, 186, 0.6);
+  flex-shrink: 0;
+}
+
+.btn-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 13px;
+  background: transparent;
+  border: 0.5px dashed var(--border-strong);
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-family: 'Geist', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+}
+.btn-add:hover {
+  border-color: var(--acc-violet);
+  color: var(--acc-violet);
+}
+
+.btn-begin {
+  width: 100%;
+  padding: 16px;
+  background: var(--primary);
+  color: var(--bg-deep);
+  border: none;
+  border-radius: 14px;
+  font-family: 'Geist', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  margin-top: 28px;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 12px 30px var(--primary-glow);
+  transition: all 0.2s;
+}
+:root[data-theme=&quot;dark&quot;] .btn-begin {
+  background: linear-gradient(135deg, var(--acc-violet), var(--acc-pink));
+  color: white;
+}
+.btn-begin:hover { transform: translateY(-2px); }
+
+/* ============================
+   TIMER SCREENS — WORK / BREAK
+   ============================ */
+.timer-screen {
+  text-align: center;
+  padding: 80px 40px;
+  position: relative;
+  min-height: 600px;
+}
+
+:root[data-theme=&quot;dark&quot;] .timer-screen.work {
+  background:
+    radial-gradient(ellipse 1000px 700px at 50% 50%, rgba(180, 124, 255, 0.15), transparent 60%),
+    radial-gradient(ellipse 500px 400px at 80% 20%, rgba(255, 107, 203, 0.10), transparent 65%),
+    radial-gradient(ellipse 400px 300px at 15% 85%, rgba(111, 200, 232, 0.06), transparent 65%),
+    linear-gradient(160deg, var(--bg-base) 0%, var(--bg-deep) 100%);
+}
+:root[data-theme=&quot;dark&quot;] .timer-screen.break {
+  background:
+    radial-gradient(ellipse 1100px 700px at 50% 50%, rgba(168, 213, 186, 0.20), transparent 60%),
+    radial-gradient(ellipse 500px 400px at 20% 20%, rgba(245, 181, 71, 0.10), transparent 65%),
+    linear-gradient(160deg, var(--bg-base) 0%, var(--bg-deep) 100%);
+}
+
+:root[data-theme=&quot;light&quot;] .timer-screen.work {
+  background:
+    radial-gradient(ellipse 800px 500px at 50% 50%, var(--acc-violet-soft), transparent 65%),
+    var(--bg-page);
+}
+:root[data-theme=&quot;light&quot;] .timer-screen.break {
+  background:
+    radial-gradient(ellipse 800px 500px at 50% 50%, var(--acc-sage-soft), transparent 65%),
+    var(--bg-page);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 18px;
+  border-radius: 100px;
+  margin-bottom: 36px;
+  position: relative;
+  z-index: 2;
+  font-family: 'Geist Mono', monospace;
+}
+.status-pill.work {
+  background: var(--acc-violet-soft);
+  border: 0.5px solid var(--acc-violet);
+  color: var(--acc-violet);
+}
+.status-pill.break {
+  background: var(--acc-sage-soft);
+  border: 0.5px solid var(--acc-sage);
+  color: var(--acc-sage);
+}
+:root[data-theme=&quot;dark&quot;] .status-pill.work {
+  box-shadow: 0 0 30px var(--primary-glow);
+}
+:root[data-theme=&quot;dark&quot;] .status-pill.break {
+  box-shadow: 0 0 30px rgba(168, 213, 186, 0.3);
+}
+.status-pill span {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  font-weight: 500;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+.live-dot {
+  width: 7px;
+  height: 7px;
+  background: currentColor;
+  border-radius: 50%;
+  box-shadow: 0 0 12px currentColor;
+  animation: pulse 2.5s ease-in-out infinite;
+}
+
+.timer-task {
+  font-family: 'Instrument Serif', serif;
+  font-size: 24px;
+  color: var(--text);
+  margin: 0 0 4px;
+  position: relative;
+  z-index: 2;
+}
+.timer-meta {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.timer-display {
+  font-family: 'Geist Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 180px;
+  font-weight: 200;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  margin: 24px 0 32px;
+  position: relative;
+  z-index: 2;
+}
+:root[data-theme=&quot;dark&quot;] .timer-display.work {
+  color: var(--text);
+  text-shadow: 0 0 80px rgba(180, 124, 255, 0.3);
+}
+:root[data-theme=&quot;dark&quot;] .timer-display.break {
+  color: var(--acc-sage);
+  text-shadow: 0 0 100px rgba(168, 213, 186, 0.4);
+}
+.timer-display .colon {
+  opacity: 0.5;
+}
+.timer-display.work .colon { color: var(--acc-violet); }
+.timer-display.break .colon { color: var(--acc-sage); }
+
+.timer-footnote {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0 0 36px;
+  position: relative;
+  z-index: 2;
+  letter-spacing: 0.05em;
+}
+
+.progress-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 36px;
+  position: relative;
+  z-index: 2;
+}
+.progress-dot {
+  width: 48px;
+  height: 4px;
+  border-radius: 2px;
+}
+.progress-dot.done {
+  background: var(--acc-violet);
+  box-shadow: 0 0 8px var(--primary-glow);
+}
+.progress-dot.active {
+  background: var(--acc-violet);
+  opacity: 0.4;
+}
+.progress-dot.todo { background: var(--border-strong); }
+
+.btn-ghost {
+  padding: 11px 22px;
+  background: var(--bg-elev);
+  color: var(--text-muted);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  font-family: 'Geist', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  position: relative;
+  z-index: 2;
+  transition: all 0.2s;
+}
+.btn-ghost:hover { border-color: var(--border-strong); }
+
+.btn-break-action {
+  padding: 11px 22px;
+  border-radius: 10px;
+  font-family: 'Geist', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  border: 0.5px solid;
+  background: var(--acc-sage-soft);
+  color: var(--acc-sage);
+  border-color: var(--acc-sage);
+  position: relative;
+  z-index: 2;
+}
+:root[data-theme=&quot;dark&quot;] .btn-break-action {
+  box-shadow: 0 0 24px rgba(168, 213, 186, 0.3);
+}
+
+/* DECORATIVE — small dots scattered like CyberX viz */
+.deco-dots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.4;
+}
+
+</style>
+</head>
+<body data-page-bg>
+
+<div class=&quot;theme-toggle&quot;>
+  <button id=&quot;btn-dark&quot; class=&quot;active&quot; onclick=&quot;setTheme('dark')&quot;>◐ Dark</button>
+  <button id=&quot;btn-light&quot; onclick=&quot;setTheme('light')&quot;>◑ Light</button>
+</div>
+
+<div class=&quot;preview-container&quot;>
+
+<div class=&quot;preview-header&quot;>
+  <h1>Focus App — full preview v3</h1>
+  <p>dashboard · session setup · work · break · with theme toggle</p>
+</div>
+
+<!-- ===================== -->
+<!-- SCREEN 1: DASHBOARD -->
+<!-- ===================== -->
+<p class=&quot;screen-label&quot;>01 — Dashboard (lands here on app open)</p>
+<div class=&quot;screen&quot;>
+  <div class=&quot;dashboard&quot;>
+
+    <!-- SIDEBAR -->
+    <aside class=&quot;sidebar&quot;>
+      <div class=&quot;sidebar-brand&quot;>
+        <div class=&quot;brand-mark&quot;><i class=&quot;ti ti-focus-2&quot;></i></div>
+        <div class=&quot;brand-name&quot;>Lockd</div>
+      </div>
+
+      <div class=&quot;nav-section&quot;>
+        <p class=&quot;nav-label&quot;>main</p>
+        <div class=&quot;nav-item active&quot;><i class=&quot;ti ti-layout-dashboard&quot;></i> Dashboard</div>
+        <div class=&quot;nav-item&quot;><i class=&quot;ti ti-player-play&quot;></i> Quick Start</div>
+        <div class=&quot;nav-item&quot;><i class=&quot;ti ti-calendar-stats&quot;></i> History</div>
+        <div class=&quot;nav-item&quot;><i class=&quot;ti ti-target&quot;></i> Goals</div>
+      </div>
+
+      <div class=&quot;nav-section&quot;>
+        <p class=&quot;nav-label&quot;>manage</p>
+        <div class=&quot;nav-item&quot;><i class=&quot;ti ti-lock&quot;></i> Allowlists</div>
+        <div class=&quot;nav-item&quot;><i class=&quot;ti ti-bell&quot;></i> Schedules</div>
+        <div class=&quot;nav-item&quot;><i class=&quot;ti ti-settings&quot;></i> Settings</div>
+      </div>
+
+      <div class=&quot;sidebar-footer&quot;>
+        <div class=&quot;user-card&quot;>
+          <div class=&quot;user-avatar&quot;>N8</div>
+          <div class=&quot;user-info&quot;>
+            <p class=&quot;user-name&quot;>n8fury</p>
+            <p class=&quot;user-meta&quot;>Level 7 · Focused</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class=&quot;dashboard-main&quot;>
+      <div class=&quot;dash-header&quot;>
+        <div class=&quot;greeting&quot;>
+          <h2>Good evening, n8fury</h2>
+          <p>You've logged 3h 40m of focus this week. Keep the rhythm going.</p>
+        </div>
+        <button class=&quot;cta-start&quot;><i class=&quot;ti ti-player-play&quot;></i> Start a session</button>
+      </div>
+
+      <!-- STAT CARDS -->
+      <div class=&quot;stat-grid&quot;>
+        <div class=&quot;stat-card&quot;>
+          <div class=&quot;stat-icon coral&quot;><i class=&quot;ti ti-flame&quot;></i></div>
+          <p class=&quot;stat-value&quot;>12</p>
+          <p class=&quot;stat-label&quot;>Day streak</p>
+          <div class=&quot;stat-trend up&quot;>↑ best this month</div>
+        </div>
+
+        <div class=&quot;stat-card&quot;>
+          <div class=&quot;stat-icon amber&quot;><i class=&quot;ti ti-clock-hour-4&quot;></i></div>
+          <p class=&quot;stat-value&quot;>14.5<span style=&quot;font-size: 16px; color: var(--text-dim);&quot;>h</span></p>
+          <p class=&quot;stat-label&quot;>Focus this week</p>
+          <div class=&quot;stat-trend up&quot;>↑ 23% vs last week</div>
+        </div>
+
+        <div class=&quot;stat-card&quot;>
+          <div class=&quot;stat-icon cyan&quot;><i class=&quot;ti ti-circle-check&quot;></i></div>
+          <p class=&quot;stat-value&quot;>4<span style=&quot;font-size: 16px; color: var(--text-dim);&quot;>/6</span></p>
+          <p class=&quot;stat-label&quot;>Sessions today</p>
+          <div class=&quot;stat-trend up&quot;>on track</div>
+        </div>
+
+        <div class=&quot;stat-card&quot;>
+          <div class=&quot;stat-icon pink&quot;><i class=&quot;ti ti-shield-x&quot;></i></div>
+          <p class=&quot;stat-value&quot;>137</p>
+          <p class=&quot;stat-label&quot;>Distractions blocked</p>
+          <div class=&quot;stat-trend down&quot;>YouTube, Reels</div>
+        </div>
+      </div>
+
+      <!-- LEVEL / XP -->
+      <div class=&quot;level-section&quot;>
+        <div class=&quot;level-badge&quot;>7</div>
+        <div class=&quot;level-info&quot;>
+          <p class=&quot;level-title&quot;>Deep Focus · Level 7</p>
+          <p class=&quot;level-subtitle&quot;>325 XP until Level 8 · &quot;Flow Master&quot;</p>
+          <div class=&quot;xp-bar&quot;><div class=&quot;xp-bar-fill&quot;></div></div>
+          <div class=&quot;xp-meta&quot;>
+            <span>1,675 XP</span>
+            <span>2,000 XP</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM GRID -->
+      <div class=&quot;bottom-grid&quot;>
+        <div class=&quot;panel&quot;>
+          <div class=&quot;panel-header&quot;>
+            <p class=&quot;panel-title&quot;>Focus hours · last 7 days</p>
+            <span class=&quot;panel-meta&quot;>avg 2.1h/day</span>
+          </div>
+          <div class=&quot;chart-area&quot;>
+            <div class=&quot;bar-col&quot;><div class=&quot;bar&quot; style=&quot;height: 40%;&quot;></div><div class=&quot;bar-label&quot;>MON</div></div>
+            <div class=&quot;bar-col&quot;><div class=&quot;bar&quot; style=&quot;height: 65%;&quot;></div><div class=&quot;bar-label&quot;>TUE</div></div>
+            <div class=&quot;bar-col&quot;><div class=&quot;bar&quot; style=&quot;height: 28%;&quot;></div><div class=&quot;bar-label&quot;>WED</div></div>
+            <div class=&quot;bar-col&quot;><div class=&quot;bar&quot; style=&quot;height: 80%;&quot;></div><div class=&quot;bar-label&quot;>THU</div></div>
+            <div class=&quot;bar-col&quot;><div class=&quot;bar&quot; style=&quot;height: 55%;&quot;></div><div class=&quot;bar-label&quot;>FRI</div></div>
+            <div class=&quot;bar-col&quot;><div class=&quot;bar&quot; style=&quot;height: 70%;&quot;></div><div class=&quot;bar-label&quot;>SAT</div></div>
+            <div class=&quot;bar-col today&quot;><div class=&quot;bar today&quot; style=&quot;height: 92%;&quot;></div><div class=&quot;bar-label&quot;>TODAY</div></div>
+          </div>
+        </div>
+
+        <div class=&quot;panel&quot;>
+          <div class=&quot;panel-header&quot;>
+            <p class=&quot;panel-title&quot;>Today's plan</p>
+            <span class=&quot;panel-meta&quot;>2 of 4 done</span>
+          </div>
+          <div class=&quot;task-item&quot;>
+            <div class=&quot;task-status done&quot;></div>
+            <span class=&quot;task-text done&quot;>Morning code review</span>
+            <span class=&quot;task-time&quot;>50m</span>
+          </div>
+          <div class=&quot;task-item&quot;>
+            <div class=&quot;task-status done&quot;></div>
+            <span class=&quot;task-text done&quot;>Zeroozen API refactor</span>
+            <span class=&quot;task-time&quot;>50m</span>
+          </div>
+          <div class=&quot;task-item&quot;>
+            <div class=&quot;task-status active&quot;></div>
+            <span class=&quot;task-text&quot;>IELTS writing practice</span>
+            <span class=&quot;task-time&quot;>50m</span>
+          </div>
+          <div class=&quot;task-item&quot;>
+            <div class=&quot;task-status pending&quot;></div>
+            <span class=&quot;task-text&quot;>SOP for TU Chemnitz</span>
+            <span class=&quot;task-time&quot;>25m</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+
+<!-- ===================== -->
+<!-- SCREEN 2: SESSION SETUP -->
+<!-- ===================== -->
+<p class=&quot;screen-label&quot;>02 — Quick Start (session setup)</p>
+<div class=&quot;screen&quot;>
+  <div class=&quot;setup-screen&quot;>
+    <p class=&quot;setup-title&quot;>Plan your next session</p>
+    <p class=&quot;setup-subtitle&quot;>Settle in. Set your rhythm. The work will meet you here.</p>
+
+    <div class=&quot;setup-grid&quot;>
+      <div>
+        <p class=&quot;field-label&quot;>Total session</p>
+        <div class=&quot;btn-pill-group&quot;>
+          <button class=&quot;btn-pill&quot;>1 hr</button>
+          <button class=&quot;btn-pill&quot;>2 hr</button>
+          <button class=&quot;btn-pill active&quot;>4 hr</button>
+          <button class=&quot;btn-pill&quot;>6 hr</button>
+        </div>
+
+        <p class=&quot;field-label&quot;>Rhythm</p>
+        <div class=&quot;rhythm-card&quot;>
+          <div class=&quot;rhythm-row&quot;>
+            <span style=&quot;font-size: 14px; color: var(--text-muted);&quot;>Work block</span>
+            <span style=&quot;font-family: 'Geist Mono', monospace; font-size: 17px;&quot;>50<span style=&quot;color: var(--text-dim); font-size: 13px;&quot;> min</span></span>
+          </div>
+          <div class=&quot;rhythm-row&quot;>
+            <span style=&quot;font-size: 14px; color: var(--text-muted);&quot;>Break</span>
+            <span style=&quot;font-family: 'Geist Mono', monospace; font-size: 17px; color: var(--acc-sage);&quot;>10<span style=&quot;opacity: 0.6; font-size: 13px;&quot;> min</span></span>
+          </div>
+        </div>
+
+        <p class=&quot;field-label&quot;>Focus intent</p>
+        <input type=&quot;text&quot; class=&quot;input-text&quot; value=&quot;Backend API for Zeroozen IoT&quot; />
+      </div>
+
+      <div>
+        <p class=&quot;field-label&quot;>Allowed during work</p>
+        <div class=&quot;allow-card&quot;>
+          <p class=&quot;section-label&quot;>APPS</p>
+          <div class=&quot;allow-row&quot;>
+            <div class=&quot;app-icon-sm&quot; style=&quot;background: var(--acc-sage-soft); color: var(--acc-sage);&quot;><i class=&quot;ti ti-code&quot;></i></div>
+            <span style=&quot;font-size: 13px; flex: 1;&quot;>VS Code</span>
+            <span class=&quot;tag allow&quot;>ALLOWED</span>
+          </div>
+          <div class=&quot;allow-row&quot;>
+            <div class=&quot;app-icon-sm&quot; style=&quot;background: var(--acc-cyan-soft); color: var(--acc-cyan);&quot;><i class=&quot;ti ti-terminal-2&quot;></i></div>
+            <span style=&quot;font-size: 13px; flex: 1;&quot;>Windows Terminal</span>
+            <span class=&quot;tag allow&quot;>ALLOWED</span>
+          </div>
+          <div class=&quot;allow-row&quot;>
+            <div class=&quot;app-icon-sm&quot; style=&quot;background: var(--acc-amber-soft); color: var(--acc-amber);&quot;><i class=&quot;ti ti-browser&quot;></i></div>
+            <span style=&quot;font-size: 13px; flex: 1;&quot;>Chrome</span>
+            <span class=&quot;tag limit&quot;>LIMITED</span>
+          </div>
+
+          <p class=&quot;section-label&quot;>WEB ALLOWLIST</p>
+          <div class=&quot;allow-row&quot;>
+            <div class=&quot;dot-glow&quot;></div>
+            <span style=&quot;font-family: 'Geist Mono', monospace; font-size: 12px; flex: 1; color: var(--text-muted);&quot;>stackoverflow.com</span>
+          </div>
+          <div class=&quot;allow-row&quot;>
+            <div class=&quot;dot-glow&quot;></div>
+            <span style=&quot;font-family: 'Geist Mono', monospace; font-size: 12px; flex: 1; color: var(--text-muted);&quot;>github.com</span>
+          </div>
+          <div class=&quot;allow-row&quot;>
+            <div class=&quot;dot-glow&quot;></div>
+            <span style=&quot;font-family: 'Geist Mono', monospace; font-size: 12px; flex: 1; color: var(--text-muted);&quot;>youtube.com/@lofigirl</span>
+          </div>
+          <button class=&quot;btn-add&quot;><i class=&quot;ti ti-plus&quot;></i> Add app or site</button>
+        </div>
+      </div>
+    </div>
+
+    <button class=&quot;btn-begin&quot;>Begin session →</button>
+  </div>
+</div>
+
+
+<!-- ===================== -->
+<!-- SCREEN 3: WORK MODE -->
+<!-- ===================== -->
+<p class=&quot;screen-label&quot;>03 — Work Mode (locked focus)</p>
+<div class=&quot;screen&quot;>
+  <div class=&quot;timer-screen work&quot;>
+    <div class=&quot;status-pill work&quot;>
+      <div class=&quot;live-dot&quot;></div>
+      <span>FOCUS LOCKED</span>
+    </div>
+    <p class=&quot;timer-task&quot;>Backend API for Zeroozen IoT</p>
+    <p class=&quot;timer-meta&quot;>Block 2 of 4</p>
+    <div class=&quot;timer-display work&quot;>37<span class=&quot;colon&quot;>:</span>24</div>
+    <p class=&quot;timer-footnote&quot;>Break in 37 minutes · breathe steady</p>
+    <div class=&quot;progress-dots&quot;>
+      <div class=&quot;progress-dot done&quot;></div>
+      <div class=&quot;progress-dot active&quot;></div>
+      <div class=&quot;progress-dot todo&quot;></div>
+      <div class=&quot;progress-dot todo&quot;></div>
+    </div>
+    <button class=&quot;btn-ghost&quot;><i class=&quot;ti ti-lock&quot; style=&quot;font-size: 12px; margin-right: 8px;&quot;></i> End session early</button>
+  </div>
+</div>
+
+
+<!-- ===================== -->
+<!-- SCREEN 4: BREAK MODE -->
+<!-- ===================== -->
+<p class=&quot;screen-label&quot;>04 — Break Mode (unlocked)</p>
+<div class=&quot;screen&quot;>
+  <div class=&quot;timer-screen break&quot;>
+    <div class=&quot;status-pill break&quot;>
+      <span>BREATHE</span>
+    </div>
+    <p class=&quot;timer-task&quot;>Step away. You earned it.</p>
+    <p class=&quot;timer-meta&quot;>Everything is unlocked</p>
+    <div class=&quot;timer-display break&quot;>07<span class=&quot;colon&quot;>:</span>42</div>
+    <p class=&quot;timer-footnote&quot;>Work mode resumes in 7 minutes</p>
+    <div style=&quot;display: flex; justify-content: center; gap: 12px;&quot;>
+      <button class=&quot;btn-ghost&quot;><i class=&quot;ti ti-coffee&quot; style=&quot;font-size: 12px; margin-right: 8px;&quot;></i> Extend +5 min</button>
+      <button class=&quot;btn-break-action&quot;><i class=&quot;ti ti-player-skip-forward&quot; style=&quot;font-size: 12px; margin-right: 8px;&quot;></i> Skip break, resume work</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('btn-dark').classList.toggle('active', theme === 'dark');
+  document.getElementById('btn-light').classList.toggle('active', theme === 'light');
+}
+// default dark
+setTheme('dark');
+</script>
+
+</body>
+</html>
+" height="900" loading="lazy" title="Lockd full app mockup"></iframe>
+  </div>
+  <p class="mockup-caption">The full flow: dashboard → session setup → work mode → break mode, in both themes.</p>
+
+  <div class="mockup-embed">
+    <div class="mockup-embed-bar">
+      <div class="dots"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+      <span class="title">lockd — calm mode vs command mode</span>
+      <span class="hint">◐ / ◑ toggle inside →</span>
+    </div>
+    <iframe srcdoc="<!DOCTYPE html>
+<html lang=&quot;en&quot;>
+<head>
+<meta charset=&quot;UTF-8&quot; />
+<meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; />
+<title>Lockd — Calm Mode vs Command Mode</title>
+<link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot; />
+<link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin />
+<link href=&quot;https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Geist:wght@200;300;400;500;600;700&amp;family=Geist+Mono:wght@300;400;500&amp;display=swap&quot; rel=&quot;stylesheet&quot; />
+<link rel=&quot;stylesheet&quot; href=&quot;https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.40.0/tabler-icons.min.css&quot; />
+<style>
+:root[data-theme=&quot;dark&quot;] {
+  --bg-page: #0A0420;
+  --bg-deep: #120832;
+  --bg-base: #1A0F3D;
+  --bg-elev: #221547;
+  --bg-card: #2B1B5A;
+  --bg-card-hover: #34216B;
+  --border: rgba(180, 160, 255, 0.08);
+  --border-strong: rgba(180, 160, 255, 0.18);
+  --text: #F0EAFF;
+  --text-muted: #9B92C9;
+  --text-dim: #6B6299;
+  --text-faint: #443D6E;
+  --acc-sage: #A8D5BA;
+  --acc-sage-soft: rgba(168, 213, 186, 0.12);
+  --acc-coral: #FF7A6E;
+  --acc-coral-soft: rgba(255, 122, 110, 0.14);
+  --acc-amber: #F5B547;
+  --acc-amber-soft: rgba(245, 181, 71, 0.14);
+  --acc-cyan: #6FC8E8;
+  --acc-cyan-soft: rgba(111, 200, 232, 0.14);
+  --acc-violet: #B47CFF;
+  --acc-violet-soft: rgba(180, 124, 255, 0.14);
+  --acc-pink: #FF6BCB;
+  --acc-pink-soft: rgba(255, 107, 203, 0.14);
+  --primary: var(--acc-violet);
+  --primary-soft: var(--acc-violet-soft);
+  --primary-glow: rgba(180, 124, 255, 0.4);
+}
+:root[data-theme=&quot;light&quot;] {
+  --bg-page: #F6F4EE;
+  --bg-deep: #FFFFFF;
+  --bg-base: #FAFAF7;
+  --bg-elev: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FAFAF7;
+  --border: rgba(0, 0, 0, 0.06);
+  --border-strong: rgba(0, 0, 0, 0.12);
+  --text: #1A1D21;
+  --text-muted: #5A6068;
+  --text-dim: #8A9099;
+  --text-faint: #B0B5BC;
+  --acc-sage: #5A8A6C;
+  --acc-sage-soft: #E0EDE4;
+  --acc-coral: #FF6B5C;
+  --acc-coral-soft: #FFE4E0;
+  --acc-amber: #F59E0B;
+  --acc-amber-soft: #FEF2D8;
+  --acc-cyan: #2BA3D4;
+  --acc-cyan-soft: #DCF0F9;
+  --acc-violet: #8B5CF6;
+  --acc-violet-soft: #ECE3FE;
+  --acc-pink: #EC4899;
+  --acc-pink-soft: #FCE0EE;
+  --primary: #1A1D21;
+  --primary-soft: rgba(26, 29, 33, 0.05);
+  --primary-glow: rgba(0, 0, 0, 0.15);
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  font-family: 'Geist', -apple-system, sans-serif;
+  background: var(--bg-page);
+  color: var(--text);
+  min-height: 100vh;
+}
+body { padding: 40px 24px; }
+
+.mono { font-family: 'Geist Mono', monospace; font-variant-numeric: tabular-nums; }
+.serif { font-family: 'Instrument Serif', serif; }
+
+.theme-toggle {
+  position: fixed; top: 24px; right: 24px; z-index: 100;
+  display: flex; background: var(--bg-elev);
+  border: 0.5px solid var(--border-strong);
+  border-radius: 100px; padding: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+.theme-toggle button {
+  background: transparent; border: none; padding: 8px 16px;
+  font-size: 12px; color: var(--text-muted); cursor: pointer;
+  border-radius: 100px; font-family: inherit; letter-spacing: 0.05em;
+}
+.theme-toggle button.active { background: var(--primary); color: var(--bg-elev); }
+:root[data-theme=&quot;dark&quot;] .theme-toggle button.active { color: var(--bg-deep); }
+
+.preview-container { max-width: 1240px; margin: 0 auto; }
+.preview-header { text-align: center; margin-bottom: 40px; }
+.preview-header h1 { font-family: 'Instrument Serif', serif; font-size: 36px; font-weight: 400; margin: 0 0 8px; }
+.preview-header p { font-size: 13px; margin: 0; color: var(--text-dim); letter-spacing: 0.05em; }
+
+.screen-label {
+  font-family: 'Geist Mono', monospace; font-size: 10px;
+  letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim);
+  margin: 0 0 16px; font-weight: 500; padding-left: 4px;
+}
+
+.screen {
+  background: var(--bg-page); border-radius: 24px; margin-bottom: 32px;
+  border: 0.5px solid var(--border); overflow: hidden; position: relative;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.2);
+}
+:root[data-theme=&quot;dark&quot;] .screen.work-bg {
+  background:
+    radial-gradient(ellipse 1000px 700px at 50% 40%, rgba(180,124,255,0.15), transparent 60%),
+    radial-gradient(ellipse 500px 400px at 85% 15%, rgba(255,107,203,0.10), transparent 65%),
+    radial-gradient(ellipse 400px 300px at 12% 85%, rgba(111,200,232,0.06), transparent 65%),
+    linear-gradient(160deg, var(--bg-base) 0%, var(--bg-deep) 100%);
+}
+:root[data-theme=&quot;light&quot;] .screen.work-bg {
+  background:
+    radial-gradient(ellipse 800px 500px at 50% 40%, var(--acc-violet-soft), transparent 65%),
+    var(--bg-page);
+}
+
+/* ============ CALM MODE ============ */
+.calm {
+  text-align: center; padding: 80px 40px; position: relative; min-height: 560px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.status-pill {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 8px 18px; border-radius: 100px; margin-bottom: 32px;
+  font-family: 'Geist Mono', monospace;
+  background: var(--acc-violet-soft); border: 0.5px solid var(--acc-violet); color: var(--acc-violet);
+}
+:root[data-theme=&quot;dark&quot;] .status-pill { box-shadow: 0 0 30px var(--primary-glow); }
+.status-pill span { font-size: 11px; letter-spacing: 0.2em; font-weight: 500; }
+@keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } }
+.live-dot { width: 7px; height: 7px; background: currentColor; border-radius: 50%; box-shadow: 0 0 12px currentColor; animation: pulse 2.5s ease-in-out infinite; }
+
+.timer-task { font-family: 'Instrument Serif', serif; font-size: 24px; margin: 0 0 4px; }
+.timer-meta { font-size: 13px; color: var(--text-dim); margin: 0; }
+.timer-display {
+  font-family: 'Geist Mono', monospace; font-variant-numeric: tabular-nums;
+  font-size: 180px; font-weight: 200; line-height: 1; letter-spacing: -0.05em; margin: 24px 0 16px;
+}
+:root[data-theme=&quot;dark&quot;] .timer-display { color: var(--text); text-shadow: 0 0 80px rgba(180,124,255,0.3); }
+.timer-display .colon { opacity: 0.5; color: var(--acc-violet); }
+.count-note { font-size: 12px; color: var(--text-dim); margin: 0 0 28px; font-family: 'Geist Mono', monospace; letter-spacing: 0.05em; }
+
+.progress-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 32px; }
+.progress-dot { width: 48px; height: 4px; border-radius: 2px; }
+.progress-dot.done { background: var(--acc-violet); box-shadow: 0 0 8px var(--primary-glow); }
+.progress-dot.active { background: var(--acc-violet); opacity: 0.4; }
+.progress-dot.todo { background: var(--border-strong); }
+
+.btn-ghost {
+  padding: 11px 22px; background: var(--bg-elev); color: var(--text-muted);
+  border: 0.5px solid var(--border); border-radius: 10px;
+  font-family: 'Geist', sans-serif; font-size: 12px; cursor: pointer; letter-spacing: 0.05em;
+}
+
+/* count toggle */
+.count-toggle {
+  display: inline-flex; background: var(--bg-elev); border: 0.5px solid var(--border);
+  border-radius: 100px; padding: 3px; margin-bottom: 28px;
+}
+.count-toggle button {
+  background: transparent; border: none; padding: 6px 14px; font-size: 11px;
+  color: var(--text-muted); cursor: pointer; border-radius: 100px;
+  font-family: 'Geist Mono', monospace; letter-spacing: 0.05em;
+}
+.count-toggle button.active { background: var(--acc-violet-soft); color: var(--acc-violet); }
+
+/* ============ COMMAND MODE ============ */
+.command { padding: 32px; position: relative; min-height: 560px; }
+.command-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 16px;
+  height: 100%;
+}
+
+.cmd-panel {
+  background: var(--bg-elev); border: 0.5px solid var(--border);
+  border-radius: 16px; padding: 18px;
+}
+:root[data-theme=&quot;dark&quot;] .cmd-panel {
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent), var(--bg-elev);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+.cmd-panel-label {
+  font-family: 'Geist Mono', monospace; font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--text-dim); margin: 0 0 14px;
+}
+
+/* center timer panel */
+.cmd-center {
+  grid-row: 1 / 3; grid-column: 2;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  background:
+    radial-gradient(ellipse 400px 300px at 50% 50%, var(--acc-violet-soft), transparent 70%),
+    var(--bg-elev);
+}
+:root[data-theme=&quot;dark&quot;] .cmd-center { box-shadow: 0 0 40px rgba(180,124,255,0.15), 0 8px 24px rgba(0,0,0,0.2); }
+.cmd-timer {
+  font-family: 'Geist Mono', monospace; font-variant-numeric: tabular-nums;
+  font-size: 96px; font-weight: 200; line-height: 1; letter-spacing: -0.04em; margin: 12px 0 8px;
+}
+:root[data-theme=&quot;dark&quot;] .cmd-timer { text-shadow: 0 0 60px rgba(180,124,255,0.3); }
+.cmd-timer .colon { color: var(--acc-violet); opacity: 0.6; }
+
+/* live stat tiles */
+.cmd-stat { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 0.5px solid var(--border); }
+.cmd-stat:last-child { border-bottom: none; }
+.cmd-stat-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.cmd-stat-icon.coral { background: var(--acc-coral-soft); color: var(--acc-coral); }
+.cmd-stat-icon.amber { background: var(--acc-amber-soft); color: var(--acc-amber); }
+.cmd-stat-icon.cyan { background: var(--acc-cyan-soft); color: var(--acc-cyan); }
+.cmd-stat-icon.sage { background: var(--acc-sage-soft); color: var(--acc-sage); }
+.cmd-stat-info { flex: 1; min-width: 0; }
+.cmd-stat-value { font-family: 'Geist Mono', monospace; font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 400; margin: 0; line-height: 1.1; }
+.cmd-stat-label { font-size: 11px; color: var(--text-dim); margin: 0; }
+
+/* focus wall */
+.focus-wall { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; margin-top: 4px; }
+.wall-cell { aspect-ratio: 1; border-radius: 3px; background: var(--bg-card); }
+.wall-cell.l1 { background: var(--acc-violet-soft); }
+.wall-cell.l2 { background: rgba(180,124,255,0.35); }
+.wall-cell.l3 { background: rgba(180,124,255,0.6); }
+.wall-cell.l4 { background: var(--acc-violet); box-shadow: 0 0 6px var(--primary-glow); }
+:root[data-theme=&quot;light&quot;] .wall-cell.l1 { background: #E4D8FC; }
+:root[data-theme=&quot;light&quot;] .wall-cell.l2 { background: #C9AFF7; }
+:root[data-theme=&quot;light&quot;] .wall-cell.l3 { background: #A982F0; }
+:root[data-theme=&quot;light&quot;] .wall-cell.l4 { background: #8B5CF6; }
+
+.cmd-status-pill {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px;
+  border-radius: 100px; font-family: 'Geist Mono', monospace;
+  background: var(--acc-violet-soft); border: 0.5px solid var(--acc-violet); color: var(--acc-violet);
+  margin-bottom: 6px;
+}
+.cmd-status-pill span { font-size: 10px; letter-spacing: 0.18em; font-weight: 500; }
+
+.cmd-intent { font-family: 'Instrument Serif', serif; font-size: 18px; margin: 14px 0 2px; }
+.cmd-block-meta { font-size: 12px; color: var(--text-dim); margin: 0 0 12px; }
+
+.cmd-progress-dots { display: flex; justify-content: center; gap: 6px; margin: 10px 0 0; }
+.cmd-progress-dots .progress-dot { width: 36px; height: 3px; }
+
+/* mini floating timer demo */
+.mini-float {
+  position: absolute; bottom: 24px; right: 24px;
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 10px 16px; border-radius: 100px;
+  background: var(--bg-card); border: 0.5px solid var(--border-strong);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.35); z-index: 5;
+}
+:root[data-theme=&quot;dark&quot;] .mini-float { box-shadow: 0 0 24px var(--primary-glow), 0 12px 32px rgba(0,0,0,0.5); }
+.mini-float .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--acc-violet); box-shadow: 0 0 8px var(--acc-violet); }
+.mini-float .t { font-family: 'Geist Mono', monospace; font-variant-numeric: tabular-nums; font-size: 16px; font-weight: 500; }
+.mini-float .lbl { font-family: 'Geist Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; }
+
+.section-divider {
+  text-align: center; margin: 8px 0 32px; color: var(--text-dim);
+  font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em;
+}
+
+.bar-mini { display: flex; align-items: flex-end; gap: 5px; height: 70px; margin-top: 4px; }
+.bar-mini-col { flex: 1; background: var(--acc-cyan-soft); border-radius: 4px 4px 0 0; }
+.bar-mini-col.peak { background: var(--acc-cyan); }
+</style>
+</head>
+<body>
+
+<div class=&quot;theme-toggle&quot;>
+  <button id=&quot;btn-dark&quot; class=&quot;active&quot; onclick=&quot;setTheme('dark')&quot;>◐ Dark</button>
+  <button id=&quot;btn-light&quot; onclick=&quot;setTheme('light')&quot;>◑ Light</button>
+</div>
+
+<div class=&quot;preview-container&quot;>
+  <div class=&quot;preview-header&quot;>
+    <h1>Two ways to focus</h1>
+    <p>same session · same lock · two personalities</p>
+  </div>
+
+  <!-- CALM MODE -->
+  <p class=&quot;screen-label&quot;>Calm Mode — one thing at a time</p>
+  <div class=&quot;screen work-bg&quot;>
+    <div class=&quot;calm&quot;>
+      <div class=&quot;status-pill&quot;><div class=&quot;live-dot&quot;></div><span>FOCUS LOCKED</span></div>
+      <p class=&quot;timer-task&quot;>Backend API for Zeroozen IoT</p>
+      <p class=&quot;timer-meta&quot;>Block 2 of 4</p>
+      <div class=&quot;timer-display&quot;>37<span class=&quot;colon&quot;>:</span>24</div>
+
+      <div class=&quot;count-toggle&quot;>
+        <button class=&quot;active&quot;>↓ TIME LEFT</button>
+        <button>↑ FOCUSED</button>
+      </div>
+
+      <div class=&quot;progress-dots&quot;>
+        <div class=&quot;progress-dot done&quot;></div>
+        <div class=&quot;progress-dot active&quot;></div>
+        <div class=&quot;progress-dot todo&quot;></div>
+        <div class=&quot;progress-dot todo&quot;></div>
+      </div>
+      <button class=&quot;btn-ghost&quot;><i class=&quot;ti ti-lock&quot; style=&quot;font-size:12px;margin-right:8px;&quot;></i>End session early</button>
+    </div>
+  </div>
+
+  <div class=&quot;section-divider&quot;>— toggle the same session into —</div>
+
+  <!-- COMMAND MODE -->
+  <p class=&quot;screen-label&quot;>Command Mode — mission control</p>
+  <div class=&quot;screen work-bg&quot;>
+    <div class=&quot;command&quot;>
+      <div class=&quot;command-grid&quot;>
+
+        <!-- TOP LEFT: live stats -->
+        <div class=&quot;cmd-panel&quot;>
+          <p class=&quot;cmd-panel-label&quot;>Live this session</p>
+          <div class=&quot;cmd-stat&quot;>
+            <div class=&quot;cmd-stat-icon amber&quot;><i class=&quot;ti ti-clock-hour-4&quot;></i></div>
+            <div class=&quot;cmd-stat-info&quot;>
+              <p class=&quot;cmd-stat-value&quot;>1:47:12</p>
+              <p class=&quot;cmd-stat-label&quot;>Focused today</p>
+            </div>
+          </div>
+          <div class=&quot;cmd-stat&quot;>
+            <div class=&quot;cmd-stat-icon coral&quot;><i class=&quot;ti ti-flame&quot;></i></div>
+            <div class=&quot;cmd-stat-info&quot;>
+              <p class=&quot;cmd-stat-value&quot;>12</p>
+              <p class=&quot;cmd-stat-label&quot;>Day streak</p>
+            </div>
+          </div>
+          <div class=&quot;cmd-stat&quot;>
+            <div class=&quot;cmd-stat-icon pink&quot; style=&quot;background:var(--acc-pink-soft);color:var(--acc-pink);&quot;><i class=&quot;ti ti-shield-x&quot;></i></div>
+            <div class=&quot;cmd-stat-info&quot;>
+              <p class=&quot;cmd-stat-value&quot;>137</p>
+              <p class=&quot;cmd-stat-label&quot;>Distractions blocked</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTER: timer -->
+        <div class=&quot;cmd-panel cmd-center&quot;>
+          <div class=&quot;cmd-status-pill&quot;><div class=&quot;live-dot&quot;></div><span>FOCUS LOCKED</span></div>
+          <div class=&quot;cmd-timer&quot;>37<span class=&quot;colon&quot;>:</span>24</div>
+          <div class=&quot;count-toggle&quot;>
+            <button class=&quot;active&quot;>↓ TIME LEFT</button>
+            <button>↑ FOCUSED</button>
+          </div>
+          <p class=&quot;cmd-intent&quot;>Backend API for Zeroozen IoT</p>
+          <p class=&quot;cmd-block-meta&quot;>Block 2 of 4 · break in 37 min</p>
+          <div class=&quot;cmd-progress-dots&quot;>
+            <div class=&quot;progress-dot done&quot;></div>
+            <div class=&quot;progress-dot active&quot;></div>
+            <div class=&quot;progress-dot todo&quot;></div>
+            <div class=&quot;progress-dot todo&quot;></div>
+          </div>
+        </div>
+
+        <!-- TOP RIGHT: today blocks chart -->
+        <div class=&quot;cmd-panel&quot;>
+          <p class=&quot;cmd-panel-label&quot;>Today's blocks</p>
+          <div class=&quot;bar-mini&quot;>
+            <div class=&quot;bar-mini-col&quot; style=&quot;height:40%;&quot;></div>
+            <div class=&quot;bar-mini-col&quot; style=&quot;height:75%;&quot;></div>
+            <div class=&quot;bar-mini-col peak&quot; style=&quot;height:100%;&quot;></div>
+            <div class=&quot;bar-mini-col&quot; style=&quot;height:60%;&quot;></div>
+            <div class=&quot;bar-mini-col&quot; style=&quot;height:0%;&quot;></div>
+            <div class=&quot;bar-mini-col&quot; style=&quot;height:0%;&quot;></div>
+          </div>
+          <p style=&quot;font-size:11px;color:var(--text-dim);margin:12px 0 0;font-family:'Geist Mono',monospace;&quot;>3 of 6 blocks done</p>
+        </div>
+
+        <!-- BOTTOM LEFT+RIGHT span: focus wall -->
+        <div class=&quot;cmd-panel&quot; style=&quot;grid-column: 1; grid-row: 2;&quot;>
+          <p class=&quot;cmd-panel-label&quot;>XP · Level 7</p>
+          <p class=&quot;mono&quot; style=&quot;font-size:28px;margin:0 0 6px;&quot;>+340<span style=&quot;font-size:13px;color:var(--text-dim);&quot;> xp</span></p>
+          <p style=&quot;font-size:11px;color:var(--text-dim);margin:0 0 12px;&quot;>earned this session</p>
+          <div style=&quot;height:6px;background:var(--bg-card);border-radius:100px;overflow:hidden;&quot;>
+            <div style=&quot;height:100%;width:68%;background:linear-gradient(90deg,var(--acc-violet),var(--acc-pink));border-radius:100px;&quot;></div>
+          </div>
+          <p class=&quot;mono&quot; style=&quot;font-size:10px;color:var(--text-dim);margin:6px 0 0;&quot;>325 xp to Flow Master</p>
+        </div>
+
+        <div class=&quot;cmd-panel&quot; style=&quot;grid-column: 3; grid-row: 2;&quot;>
+          <p class=&quot;cmd-panel-label&quot;>Focus wall · last 28 days</p>
+          <div class=&quot;focus-wall&quot;>
+            <div class=&quot;wall-cell l2&quot;></div><div class=&quot;wall-cell l1&quot;></div><div class=&quot;wall-cell l3&quot;></div><div class=&quot;wall-cell l4&quot;></div><div class=&quot;wall-cell&quot;></div><div class=&quot;wall-cell l2&quot;></div><div class=&quot;wall-cell l1&quot;></div><div class=&quot;wall-cell l3&quot;></div><div class=&quot;wall-cell l2&quot;></div><div class=&quot;wall-cell l4&quot;></div><div class=&quot;wall-cell l1&quot;></div><div class=&quot;wall-cell&quot;></div><div class=&quot;wall-cell l2&quot;></div><div class=&quot;wall-cell l3&quot;></div>
+            <div class=&quot;wall-cell l1&quot;></div><div class=&quot;wall-cell l3&quot;></div><div class=&quot;wall-cell l4&quot;></div><div class=&quot;wall-cell l2&quot;></div><div class=&quot;wall-cell l1&quot;></div><div class=&quot;wall-cell&quot;></div><div class=&quot;wall-cell l3&quot;></div><div class=&quot;wall-cell l2&quot;></div><div class=&quot;wall-cell l4&quot;></div><div class=&quot;wall-cell l3&quot;></div><div class=&quot;wall-cell l1&quot;></div><div class=&quot;wall-cell l2&quot;></div><div class=&quot;wall-cell l4&quot;></div><div class=&quot;wall-cell l3&quot;></div>
+          </div>
+          <p style=&quot;font-size:11px;color:var(--text-dim);margin:12px 0 0;font-family:'Geist Mono',monospace;&quot;>today is brightest 🔥</p>
+        </div>
+
+      </div>
+
+      <!-- floating mini timer demo -->
+      <div class=&quot;mini-float&quot;>
+        <div class=&quot;dot&quot;></div>
+        <div>
+          <div class=&quot;t&quot;>37:24</div>
+          <div class=&quot;lbl&quot;>BLOCK 2/4</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class=&quot;section-divider&quot; style=&quot;opacity:0.7;&quot;>↑ the floating pill (bottom-right) is the always-on-top mini timer that sits over VS Code</div>
+
+</div>
+
+<script>
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('btn-dark').classList.toggle('active', theme === 'dark');
+  document.getElementById('btn-light').classList.toggle('active', theme === 'light');
+}
+setTheme('dark');
+</script>
+
+</body>
+</html>
+" height="1500" loading="lazy" title="Calm vs Command mode mockup"></iframe>
+  </div>
+  <p class="mockup-caption">The same locked session in two personalities — minimal Calm Mode and mission-control Command Mode, with the floating mini timer.</p>
+
+</section>
+
+<!-- 11 TECH -->
+<section id="tech">
+  <p class="sec-num">11</p>
+  <h2>Technical approach</h2>
+  <p class="sec-intro">Windows-first, built on Tauri.</p>
+
+  <h3>Why Tauri over Electron</h3>
+  <table class="tbl">
+    <tr><th></th><th>Tauri</th><th>Electron</th></tr>
+    <tr><td><strong>Bundle</strong></td><td>~10 MB</td><td>150 MB+</td></tr>
+    <tr><td><strong>Idle RAM</strong></td><td>~30 MB</td><td>200–400 MB</td></tr>
+    <tr><td><strong>System hooks</strong></td><td>Rust backend — strong</td><td>Node.js — weaker for OS-level work</td></tr>
+    <tr><td><strong>UI</strong></td><td>HTML/CSS/JS — your existing skills</td><td>Same</td></tr>
+  </table>
+  <p>The UI is plain web tech (your strength). The Rust parts needed for v1 are mostly copy-paste level — you don't need deep Rust to ship.</p>
+
+  <h3>How blocking works on Windows</h3>
+  <table class="tbl">
+    <tr><th>Method</th><th>Bypass-resistance</th><th>Difficulty</th></tr>
+    <tr><td><strong>Hosts file</strong> redirect to 127.0.0.1</td><td><span class="pill amber">Low</span> (VPN/DNS)</td><td>Easy</td></tr>
+    <tr><td><strong>Firewall rules</strong> per-domain</td><td><span class="pill amber">Medium</span></td><td>Medium</td></tr>
+    <tr><td><strong>Local proxy</strong> intercepts traffic</td><td><span class="pill green">High</span></td><td>Hard</td></tr>
+  </table>
+  <p>For v1, the hosts-file approach is a reasonable start (it's roughly what Cold Turkey does). Channel-level allowlisting for sites like YouTube needs deeper URL matching — likely a companion browser extension or local proxy, which is the harder, later piece.</p>
+</section>
+
+<!-- 12 OPEN QUESTIONS -->
+<section id="open">
+  <p class="sec-num">12</p>
+  <h2>Open questions</h2>
+  <p class="sec-intro">Decisions still to make.</p>
+
+  <ul class="clean">
+    <li><strong>Name.</strong> "Lockd" is a placeholder. Needs a final decision and a domain check.</li>
+    <li><strong>Theme cohesion.</strong> Dark and light currently feel like different products. Intentional contrast, or pull them closer?</li>
+    <li><strong>Timer screen energy.</strong> <span class="pill green">Resolved</span> Shipping both — Calm Mode (minimal) and Command Mode (mission-control), user-switchable. See section 06.</li>
+    <li><strong>The exit mechanism.</strong> What's the one annoying-enough early exit? (Type a phrase, solve math, timed countdown.)</li>
+    <li><strong>Forced vs. skippable breaks.</strong> Should "skip break, resume work" exist, or are breaks mandatory?</li>
+    <li><strong>Monetization.</strong> One-time purchase (Cold Turkey model) vs. freemium. MS Store for credibility, not discovery.</li>
+  </ul>
+</section>
+
+<!-- 13 ROADMAP -->
+<section id="roadmap">
+  <p class="sec-num">13</p>
+  <h2>Roadmap</h2>
+  <p class="sec-intro">A rough sequence, not a commitment.</p>
+
+  <table class="tbl">
+    <tr><th>Stage</th><th>Focus</th></tr>
+    <tr><td><span class="pill violet">Now</span></td><td>Lock the visual direction (this spec + mockups). Decide name.</td></tr>
+    <tr><td><span class="pill violet">Next</span></td><td>Tauri scaffold + session state machine. Hosts-file blocking. Work/break loop.</td></tr>
+    <tr><td><span class="pill violet">Then</span></td><td>Dashboard stats persistence, gamification logic, themes wired up.</td></tr>
+    <tr><td><span class="pill violet">v1 ship</span></td><td>Landing page, MS Store listing, ProductHunt + Reddit + study-Twitter launch.</td></tr>
+    <tr><td><span class="pill violet">Later</span></td><td>Channel-level web allowlist, context-aware locking, phone pairing, macOS.</td></tr>
+  </table>
+
+  <h3>Distribution reality</h3>
+  <p>MS Store is for credibility and easy install — <strong>not</strong> a discovery channel. Real traffic will come from a clean landing page, the study community on Twitter/X, Reddit (r/productivity, r/studytips), and a ProductHunt launch. The beautiful UI is the marketing asset — it's what gets screenshotted and shared.</p>
+</section>
+
+<footer>
+  <p>Lockd — Product Spec v0.1 · Working document · Generated from the brainstorming session</p>
+</footer>
+
+</div>
+</body>
+</html>
