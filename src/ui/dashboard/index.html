@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lockd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./dashboard.css" />
+  </head>
+  <body>
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">◆</div>
+        <span class="brand-name">Lockd</span>
+      </div>
+      <nav class="topnav" id="topnav">
+        <button class="navlink" data-view="dashboard">Dashboard</button>
+        <button class="navlink" data-view="setup">New session</button>
+      </nav>
+      <div class="theme-toggle" id="themeToggle">
+        <button data-theme-btn="dark">◐ Dark</button>
+        <button data-theme-btn="light">◑ Light</button>
+      </div>
+    </header>
+
+    <main class="stage">
+      <!-- DASHBOARD -->
+      <section class="view" data-view="dashboard">
+        <div class="view-head">
+          <div>
+            <h1 class="font-serif greeting" id="greeting">Welcome back.</h1>
+            <p class="sub" id="greetingSub">Ready to lock in?</p>
+          </div>
+          <button class="cta" data-action="goto-setup">Start a session</button>
+        </div>
+
+        <div class="stat-grid" id="statGrid"></div>
+
+        <div class="level-card" id="levelCard"></div>
+
+        <div class="panel">
+          <h3 class="panel-title">Distraction presets</h3>
+          <p class="panel-hint">Trim these sites during focus — they stay usable, the rabbit holes don't.</p>
+          <div id="presetGroups"></div>
+        </div>
+
+        <div class="two-col">
+          <div class="panel">
+            <h3 class="panel-title">Hard-blocked sites</h3>
+            <p class="panel-hint">Whole-site block during focus.</p>
+            <div class="editor">
+              <div class="editrow">
+                <input type="text" id="blockInput" placeholder="add a domain, e.g. tiktok.com" />
+                <button class="btn" data-action="block-add">Add</button>
+              </div>
+              <ul class="chiplist" id="blockList"></ul>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3 class="panel-title">YouTube channel lock</h3>
+            <label class="switch">
+              <input type="checkbox" id="ytLock" />
+              <span>Only allow these channels during focus</span>
+            </label>
+            <div class="editor">
+              <div class="editrow">
+                <input type="text" id="ytInput" placeholder="@channel, /channel/UC…, or URL" />
+                <button class="btn" data-action="yt-add">Add</button>
+              </div>
+              <ul class="chiplist" id="ytList"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETUP -->
+      <section class="view" data-view="setup">
+        <h1 class="font-serif view-title">Plan your session</h1>
+        <p class="sub">Set the shape of your focus. Everything outside your rules locks during work.</p>
+
+        <div class="panel">
+          <h3 class="panel-title">Total duration</h3>
+          <div class="pillrow" id="durationPills"></div>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-title">Work / break rhythm</h3>
+          <div class="pillrow" id="rhythmPills"></div>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-title">Focus intent</h3>
+          <input type="text" id="intentInput" class="bigInput" placeholder="What are you working on?" />
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-title">Work surface</h3>
+          <div class="pillrow" id="surfacePills"></div>
+        </div>
+
+        <div class="setup-actions">
+          <button class="btn ghost" data-action="goto-dashboard">Cancel</button>
+          <button class="cta" data-action="start-session" id="startBtn">Lock in →</button>
+        </div>
+      </section>
+
+      <!-- WORK -->
+      <section class="view work" data-view="work">
+        <div class="work-top">
+          <span class="status-pill work" id="workStatusPill"><span class="dot"></span> Focus locked</span>
+          <div class="surface-toggle" id="surfaceToggle">
+            <button data-surface="calm">Calm</button>
+            <button data-surface="command">Command</button>
+          </div>
+        </div>
+
+        <div class="work-center">
+          <div class="bigtimer font-mono" id="workTimer">00:00</div>
+          <p class="work-intent font-serif" id="workIntent"></p>
+          <div class="block-progress" id="blockProgress"></div>
+          <div class="work-controls">
+            <button class="btn" data-action="toggle-count" id="countToggle">Show focused</button>
+            <button class="btn" data-action="pause" id="workPause">Pause</button>
+            <button class="btn danger" data-action="exit">End session</button>
+          </div>
+        </div>
+
+        <!-- Command-only panel -->
+        <div class="command-extra" id="commandExtra">
+          <div class="cmd-stats" id="cmdStats"></div>
+          <div class="panel focuswall-panel">
+            <h3 class="panel-title">Focus wall · 28 days</h3>
+            <div class="focuswall" id="focusWall"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BREAK -->
+      <section class="view break" data-view="break">
+        <span class="status-pill break"><span class="dot"></span> Everything unlocked</span>
+        <div class="bigtimer break-timer font-mono" id="breakTimer">00:00</div>
+        <p class="break-msg font-serif">Step away. You earned it.</p>
+        <div class="work-controls">
+          <button class="btn" data-action="extend">+5 min</button>
+          <button class="btn" data-action="skip-break">Skip break →</button>
+          <button class="btn danger" data-action="exit">End session</button>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./dashboard.js"></script>
+  </body>
+</html>

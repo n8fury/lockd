@@ -3,6 +3,7 @@
 import browser from 'webextension-polyfill';
 import { MSG, ALARM_PHASE } from '../shared/constants.js';
 import { loadSettings, saveSettings } from '../shared/settings.js';
+import { loadStats } from '../shared/stats.js';
 import * as machine from './sessionMachine.js';
 import { applyBlocking } from './blocking.js';
 
@@ -89,6 +90,8 @@ browser.runtime.onMessage.addListener((message) => {
       return machine.recover().then(() => machine.getSnapshot());
     case MSG.GET_SETTINGS:
       return ensureSettings();
+    case MSG.GET_STATS:
+      return loadStats();
     case MSG.UPDATE_SETTINGS:
       return saveSettings(message.settings).then(async (merged) => {
         settings = merged;

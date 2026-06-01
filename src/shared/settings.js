@@ -18,6 +18,7 @@ export const DEFAULT_SETTINGS = {
   // during a work block; every other YouTube video/channel is blocked.
   youtubeChannelLock: false,
   theme: 'dark',
+  surface: 'calm', // work surface: 'calm' | 'command'
 };
 
 export async function loadSettings() {

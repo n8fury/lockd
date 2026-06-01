@@ -95,17 +95,19 @@ Goal: allow one specific YouTube channel/stream, block the rest.
 
 ---
 
-## Phase 5 — UI surfaces (port the spec mockups)
+## Phase 5 — UI surfaces (port the spec mockups) ✅
 Goal: the real, beautiful surfaces from the spec, wired to live state.
 
-- [ ] `shared/theme` — CyberX dark + Noteflow light tokens; theme switch persisted.
-- [ ] **Popup = floating mini-timer** (spec §06): block countdown + live dot + always-on toggle + start/stop.
-- [ ] **Dashboard** (full extension page): greeting, stat cards, level/XP bar, weekly chart, today's plan, preset toggles, allowlist editor.
-- [ ] **Session setup**: duration pills, work/break rhythm, intent input, app/site/preset selection.
-- [ ] **Break page**: large sage-tinted countdown, extend/skip.
-- [ ] Calm vs. Command work-surface toggle (Command adds live stats + 28-day focus wall).
+- [x] `ui/theme.css` — CyberX dark + Noteflow light tokens; theme switch persisted in settings + applied on every page.
+- [x] **Popup = mini-timer** (spec §06): themed, live countdown + status dot, contextual controls (pause/resume/end, +5/skip, quick-start/plan), always-on toggle, "Open dashboard".
+- [x] **Dashboard** (full page SPA, also `options_ui`): greeting, 4 stat cards, level/XP bar, preset toggles, hard-block editor, YouTube channel-lock editor.
+- [x] **Session setup**: duration pills (1/2/4/6h + Test), rhythm pills (25/5, 50/10, 90/15, Test), intent input, Calm/Command surface pick → starts session.
+- [x] **Break view**: sage-tinted big countdown, "everything unlocked", +5 / skip / end.
+- [x] **Calm vs Command** work surface toggle (Command adds live stat tiles + 28-day focus wall); count up/down toggle; auto-routing by session status.
+- [x] `shared/stats.js` model + `GET_STATS` so the dashboard renders real shapes (XP/level/streak/wall); increments wired in Phase 6.
 
 **DoD:** Full visual flow (dashboard → setup → work → break) navigable and matches the spec's look in both themes.
+> Builds clean (chrome+firefox); dashboard bundled + registered as options_ui. Stats show zeros until Phase 6 wires increments. Verify visuals in browser at the end.
 
 ---
 

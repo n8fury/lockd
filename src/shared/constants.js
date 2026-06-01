@@ -23,6 +23,7 @@ export const MSG = {
   SETTINGS_CHANGED: 'SETTINGS_CHANGED', // broadcast from background
   GET_SETTINGS: 'GET_SETTINGS',
   UPDATE_SETTINGS: 'UPDATE_SETTINGS',
+  GET_STATS: 'GET_STATS',
 };
 
 // Blocking modes:

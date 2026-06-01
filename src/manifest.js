@@ -19,6 +19,10 @@ export function getManifest(browser) {
       default_popup: 'src/ui/popup/index.html',
       default_title: 'Lockd',
     },
+    options_ui: {
+      page: 'src/ui/dashboard/index.html',
+      open_in_tab: true,
+    },
     permissions: ['storage', 'alarms', 'declarativeNetRequest'],
     // Broad host access is required for a site blocker: DNR redirect actions need
     // host permission for the requests they rewrite, and content scripts (Phase 3)

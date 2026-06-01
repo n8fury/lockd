@@ -1,9 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lockd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@300;400&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="./popup.css" />
   </head>
   <body>
@@ -11,39 +17,20 @@
       <div class="brand">
         <div class="brand-mark">◆</div>
         <span class="brand-name">Lockd</span>
-        <span class="status-pill" id="statusPill">idle</span>
+        <span class="status-pill" id="statusPill"><span class="dot"></span> idle</span>
       </div>
 
-      <div class="timer" id="timer">--:--</div>
-      <div class="sub" id="sub">No session</div>
+      <div class="timer font-mono" id="timer">--:--</div>
+      <p class="intent font-serif" id="intent">No active session</p>
 
-      <div class="controls" id="controls">
-        <button class="btn primary" data-action="start-test">Test 6s/4s</button>
-        <button class="btn primary" data-action="start-standard">50 / 10 · 2h</button>
-        <button class="btn" data-action="pause">Pause</button>
-        <button class="btn" data-action="resume">Resume</button>
-        <button class="btn" data-action="skip">Skip phase</button>
-        <button class="btn danger" data-action="stop">Stop</button>
-      </div>
+      <div class="controls" id="controls"></div>
 
-      <label class="toggle">
+      <label class="switch">
         <input type="checkbox" id="alwaysOn" />
         <span>Always-on focus</span>
       </label>
 
-      <div class="ytlock">
-        <label class="toggle">
-          <input type="checkbox" id="ytLock" />
-          <span>YouTube channel lock</span>
-        </label>
-        <div class="ytrow">
-          <input type="text" id="ytInput" placeholder="@channel, /channel/UC…, or URL" />
-          <button class="btn" data-action="yt-add">Add</button>
-        </div>
-        <ul class="ytlist" id="ytList"></ul>
-      </div>
-
-      <p class="hint">Phase 4 · channel allowlist (debug)</p>
+      <button class="dash-link" id="openDash">Open dashboard →</button>
     </main>
     <script type="module" src="./popup.js"></script>
   </body>

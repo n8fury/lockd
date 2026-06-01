@@ -1,0 +1,76 @@
+/* Lockd shared design tokens — CyberX (dark) + Noteflow (light).
+   Imported by every extension page. Set <html data-theme="dark|light">. */
+
+:root[data-theme='dark'] {
+  --bg-page: #0a0420;
+  --bg-deep: #120832;
+  --bg-base: #1a0f3d;
+  --bg-elev: #221547;
+  --bg-card: #2b1b5a;
+  --bg-card-hover: #34216b;
+  --bg-sidebar: #0f0628;
+
+  --border: rgba(180, 160, 255, 0.1);
+  --border-strong: rgba(180, 160, 255, 0.2);
+
+  --text: #f0eaff;
+  --text-muted: #9b92c9;
+  --text-dim: #6b6299;
+  --text-faint: #443d6e;
+
+  --acc-sage: #a8d5ba;   --acc-sage-soft: rgba(168, 213, 186, 0.12);
+  --acc-coral: #ff7a6e;  --acc-coral-soft: rgba(255, 122, 110, 0.14);
+  --acc-amber: #f5b547;  --acc-amber-soft: rgba(245, 181, 71, 0.14);
+  --acc-cyan: #6fc8e8;   --acc-cyan-soft: rgba(111, 200, 232, 0.14);
+  --acc-violet: #b47cff; --acc-violet-soft: rgba(180, 124, 255, 0.14);
+  --acc-pink: #ff6bcb;   --acc-pink-soft: rgba(255, 107, 203, 0.14);
+
+  --primary: var(--acc-violet);
+  --primary-soft: var(--acc-violet-soft);
+  --primary-glow: rgba(180, 124, 255, 0.4);
+  --on-primary: #fff;
+
+  --page-bg:
+    radial-gradient(ellipse 1000px 600px at 100% 0%, rgba(180, 124, 255, 0.16), transparent 60%),
+    radial-gradient(ellipse 800px 500px at 0% 100%, rgba(255, 107, 203, 0.07), transparent 65%),
+    linear-gradient(160deg, var(--bg-base), var(--bg-deep));
+  --cta-bg: linear-gradient(135deg, var(--acc-violet), var(--acc-pink));
+}
+
+:root[data-theme='light'] {
+  --bg-page: #f6f4ee;
+  --bg-deep: #ffffff;
+  --bg-base: #fafaf7;
+  --bg-elev: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fafaf7;
+  --bg-sidebar: #ffffff;
+
+  --border: rgba(0, 0, 0, 0.06);
+  --border-strong: rgba(0, 0, 0, 0.12);
+
+  --text: #1a1d21;
+  --text-muted: #5a6068;
+  --text-dim: #8a9099;
+  --text-faint: #b0b5bc;
+
+  --acc-sage: #5a8a6c;   --acc-sage-soft: #e0ede4;
+  --acc-coral: #ff6b5c;  --acc-coral-soft: #ffe4e0;
+  --acc-amber: #f59e0b;  --acc-amber-soft: #fef2d8;
+  --acc-cyan: #2ba3d4;   --acc-cyan-soft: #dcf0f9;
+  --acc-violet: #8b5cf6; --acc-violet-soft: #ece3fe;
+  --acc-pink: #ec4899;   --acc-pink-soft: #fce0ee;
+
+  --primary: #1a1d21;
+  --primary-soft: rgba(26, 29, 33, 0.05);
+  --primary-glow: rgba(0, 0, 0, 0.15);
+  --on-primary: #fff;
+
+  --page-bg: var(--bg-page);
+  --cta-bg: var(--primary);
+}
+
+* { box-sizing: border-box; }
+
+.font-serif { font-family: 'Instrument Serif', Georgia, serif; }
+.font-mono { font-family: 'Geist Mono', ui-monospace, monospace; }
