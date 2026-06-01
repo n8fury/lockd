@@ -34,43 +34,49 @@ Goal: an empty-but-real extension that loads in both browsers.
 
 ---
 
-## Phase 1 — Session model & state machine (no blocking yet)
+## Phase 1 — Session model & state machine (no blocking yet) ✅
 Goal: the work/break loop runs in the background and is observable.
 
-- [ ] `shared/storage.js` — typed get/set wrappers over `browser.storage.local`.
-- [ ] `shared/session.js` — session model (duration, work/break rhythm, intent, allowlists, presets on).
-- [ ] State machine: `idle → work → break → work → … → done`, plus orthogonal `alwaysOn` flag.
-- [ ] `chrome.alarms`-driven tick; transitions fire on schedule and survive service-worker sleep.
-- [ ] Message API between background ↔ UI (start/pause/stop session, toggle always-on, get state).
-- [ ] Temporary debug popup showing current state + timer counting down.
+- [x] `shared/storage.js` — typed get/set wrappers over `browser.storage.local`.
+- [x] `shared/constants.js` — STATUS, MSG, STORAGE_KEYS, defaults.
+- [x] `shared/session.js` — pure session model + helpers (sequence builder, snapshot, remaining).
+- [x] State machine (`background/sessionMachine.js`): `idle → work → break → … → done`, orthogonal `alwaysOn`.
+- [x] `chrome.alarms` + absolute timestamps; `recover()` fast-forwards missed transitions after SW sleep/reload.
+- [x] Message API (`background/index.js`): start/pause/resume/stop/skip/extend, toggle always-on, get state, TICK.
+- [x] Debug popup: live countdown, status pill, block progress, controls, always-on toggle.
 
 **DoD:** Start a session in the popup → watch it tick work→break→work and auto-resume after a reload.
+> Builds clean (chrome+firefox). Live-tick + recovery logic in place; verify in browser at the end.
 
 ---
 
-## Phase 2 — Blocking engine (whole-site) + block page
+## Phase 2 — Blocking engine (whole-site) + block page ✅
 Goal: during a work block, blocked sites redirect; during break/idle they don't.
 
-- [ ] `shared/resolver.js` — single source of truth: `shouldBlock(url, state)` (handles sessions + always-on).
-- [ ] `declarativeNetRequest` dynamic rules generated from the resolver; redirect to `ui/block`.
-- [ ] Background applies rules on work-block enter, clears them on break/stop.
-- [ ] `ui/block` interstitial page (uses design tokens; shows why blocked + time until break).
-- [ ] Verify behavior identical on Chromium & Firefox.
+- [x] `shared/resolver.js` — single source of truth: `blockingActive(snap)` (work block OR always-on; off on break/idle/paused).
+- [x] `shared/settings.js` — settings model (mode, blocklist, allowlist, presets), load/save/merge, domain normalize.
+- [x] `background/blocking.js` — `declarativeNetRequest` dynamic rules; supports **blocklist** + strict **allowlist** modes; redirect to block page.
+- [x] Background applies rules on every session/settings change; clears them on break/stop.
+- [x] `ui/block` interstitial (design tokens; shows intent + time-until-break; auto-`history.back()` when blocking lifts).
+- [x] Manifest: `declarativeNetRequest` + `<all_urls>` host perms + block page in `web_accessible_resources`. Verified in emitted manifest.
 
 **DoD:** With a session running, a blocked domain shows the block page during work and loads normally during break.
+> Builds clean (chrome+firefox). Behavior identical across both (same DNR API). Verify in browser at the end.
 
 ---
 
-## Phase 3 — Element-level blocking (the differentiator)
+## Phase 3 — Element-level blocking (the differentiator) ✅
 Goal: curated presets surgically hide distraction elements while keeping the site usable.
 
-- [ ] `rules/` schema: per-site `{ host, label, selectors[], description }` preset definitions.
-- [ ] Content script that injects a `<style>` of active hide-rules; reacts to SPA navigation (MutationObserver / `chrome.webNavigation`).
-- [ ] First presets: **YouTube** (recs, Shorts shelf, homepage feed, autoplay, comments), **Instagram** (Reels, Explore), **X** (For You, trending), **Reddit** (home feed).
-- [ ] Presets gated by session/always-on state via the resolver.
-- [ ] Toggle plumbing (storage) — per-preset on/off (UI comes in Phase 5).
+- [x] `rules/presets.js`: per-preset `{ id, group, hosts[], label, description, selectors[], defaultOff? }` + host helpers.
+- [x] Content script (`content/elementBlocker.js`) injects a `<style>` of active hide-rules. Pure CSS → auto-applies to SPA-added nodes (no observer needed).
+- [x] Presets: **YouTube** (home feed, recs sidebar, Shorts, comments, end-screen), **Instagram** (Reels, Explore, suggested), **X/Twitter** (For You, trending, explore), **Reddit** (feed, popular nav).
+- [x] Gated by `blockingActive(snap)` — trims during work/always-on, restores on break.
+- [x] Default blocklist trimmed to pure time-sinks (tiktok/facebook) so preset sites stay usable; per-preset toggle plumbing in settings (UI in Phase 5).
+- [x] Background fans out STATE_CHANGED/SETTINGS_CHANGED to **tabs** (content scripts) so changes apply without reload. Content script scoped to preset hosts in manifest (verified).
 
 **DoD:** During a work block, YouTube loads but recommendations + Shorts are gone; toggling the preset off restores them.
+> Builds clean. Selectors are best-effort (site-change fragility tracked in backlog). Verify in browser at the end.
 
 ---
 

@@ -1,68 +1,140 @@
-/* Phase 0 placeholder styling. Real theme tokens (CyberX dark / Noteflow light)
+/* Phase 1 debug popup styling. Real theme tokens (CyberX dark / Noteflow light)
    land in Phase 5 when we port the spec mockups. */
 :root {
   --bg: #0a0420;
   --bg-elev: #1a0f3d;
+  --bg-card: #2b1b5a;
+  --border: rgba(180, 160, 255, 0.14);
   --text: #f0eaff;
   --text-muted: #9b92c9;
   --text-dim: #6b6299;
   --violet: #b47cff;
   --pink: #ff6bcb;
+  --sage: #a8d5ba;
+  --coral: #ff7a6e;
+  --amber: #f5b547;
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  width: 280px;
+  width: 300px;
   font-family: system-ui, -apple-system, sans-serif;
   background:
-    radial-gradient(ellipse 400px 300px at 100% 0%, rgba(180, 124, 255, 0.18), transparent 60%),
+    radial-gradient(ellipse 420px 320px at 100% 0%, rgba(180, 124, 255, 0.18), transparent 60%),
     linear-gradient(160deg, var(--bg-elev), var(--bg));
   color: var(--text);
 }
 
-.popup {
-  padding: 22px 20px 18px;
-}
+.popup { padding: 18px 18px 14px; }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .brand-mark {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 8px;
   background: linear-gradient(135deg, var(--violet), var(--pink));
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 15px;
+  font-size: 14px;
   box-shadow: 0 4px 12px rgba(180, 124, 255, 0.4);
 }
 
-.brand-name {
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+.brand-name { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+
+.status-pill {
+  margin-left: auto;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 100px;
+  background: rgba(180, 124, 255, 0.16);
+  color: var(--violet);
+}
+.status-pill.work { background: rgba(180, 124, 255, 0.16); color: var(--violet); }
+.status-pill.break { background: rgba(168, 213, 186, 0.16); color: var(--sage); }
+.status-pill.paused { background: rgba(245, 181, 71, 0.16); color: var(--amber); }
+.status-pill.done { background: rgba(168, 213, 186, 0.16); color: var(--sage); }
+.status-pill.idle { background: rgba(155, 146, 201, 0.14); color: var(--text-muted); }
+
+.timer {
+  font-family: ui-monospace, "Geist Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 52px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  text-align: center;
+  margin: 6px 0 2px;
+  line-height: 1;
 }
 
-.status {
-  font-size: 14px;
+.sub {
+  text-align: center;
+  font-size: 12px;
   color: var(--text-muted);
-  margin: 0 0 8px;
+  margin-bottom: 16px;
+  min-height: 16px;
 }
+
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.btn {
+  appearance: none;
+  border: 0.5px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 9px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.15s, opacity 0.15s;
+}
+.btn:hover { border-color: rgba(180, 160, 255, 0.3); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn[disabled] { opacity: 0.35; cursor: not-allowed; transform: none; }
+.btn.primary {
+  background: linear-gradient(135deg, var(--violet), var(--pink));
+  border-color: transparent;
+  color: #fff;
+}
+.btn.danger { color: var(--coral); }
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 6px 2px;
+  cursor: pointer;
+  user-select: none;
+}
+.toggle input { accent-color: var(--violet); width: 15px; height: 15px; }
 
 .hint {
-  font-family: ui-monospace, "Geist Mono", monospace;
-  font-size: 10px;
-  letter-spacing: 0.18em;
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text-dim);
-  margin: 0;
+  margin: 10px 0 0;
+  text-align: center;
 }

@@ -11,9 +11,27 @@
       <div class="brand">
         <div class="brand-mark">◆</div>
         <span class="brand-name">Lockd</span>
+        <span class="status-pill" id="statusPill">idle</span>
       </div>
-      <p class="status" id="status">Booting…</p>
-      <p class="hint">Phase 0 · foundation</p>
+
+      <div class="timer" id="timer">--:--</div>
+      <div class="sub" id="sub">No session</div>
+
+      <div class="controls" id="controls">
+        <button class="btn primary" data-action="start-test">Test 6s/4s</button>
+        <button class="btn primary" data-action="start-standard">50 / 10 · 2h</button>
+        <button class="btn" data-action="pause">Pause</button>
+        <button class="btn" data-action="resume">Resume</button>
+        <button class="btn" data-action="skip">Skip phase</button>
+        <button class="btn danger" data-action="stop">Stop</button>
+      </div>
+
+      <label class="toggle">
+        <input type="checkbox" id="alwaysOn" />
+        <span>Always-on focus</span>
+      </label>
+
+      <p class="hint">Phase 1 · session machine (debug)</p>
     </main>
     <script type="module" src="./popup.js"></script>
   </body>
