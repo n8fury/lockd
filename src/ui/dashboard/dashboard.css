@@ -229,7 +229,22 @@ body {
 .fw-cell.l4 { background: var(--acc-violet); box-shadow: 0 0 10px var(--primary-glow); }
 .fw-cell.today { outline: 1.5px solid var(--acc-pink); outline-offset: 1px; }
 
+/* ---------- ROLL-UP ---------- */
+.view.done { text-align: center; padding-top: 40px; }
+.rollup-mark {
+  width: 64px; height: 64px; border-radius: 18px; margin: 0 auto 24px;
+  background: var(--cta-bg); color: var(--on-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px; box-shadow: 0 12px 40px var(--primary-glow);
+}
+.rollup-title { font-size: 44px; margin: 0 0 6px; letter-spacing: -0.02em; }
+.rollup-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; max-width: 640px; margin: 28px auto 32px; }
+.rollup-cell { background: var(--bg-elev); border: 0.5px solid var(--border); border-radius: 14px; padding: 18px; }
+.rollup-cell .v { font-family: 'Geist Mono', monospace; font-variant-numeric: tabular-nums; font-size: 26px; line-height: 1; }
+.rollup-cell .l { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
 @media (max-width: 760px) {
+  .rollup-grid { grid-template-columns: repeat(2, 1fr); }
   .stat-grid, .cmd-stats { grid-template-columns: repeat(2, 1fr); }
   .two-col { grid-template-columns: 1fr; }
   .bigtimer { font-size: 110px; }

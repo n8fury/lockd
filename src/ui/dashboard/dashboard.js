@@ -64,13 +64,14 @@ function setView(view) {
 function surfaceFor(status) {
   if (status === STATUS.WORK || status === STATUS.PAUSED) return 'work';
   if (status === STATUS.BREAK) return 'break';
+  if (status === STATUS.DONE) return 'done';
   return null;
 }
 
 function autoRoute() {
   const surface = surfaceFor(snap?.status);
   if (surface && currentView !== surface) setView(surface);
-  else if (!surface && (currentView === 'work' || currentView === 'break')) setView('dashboard');
+  else if (!surface && ['work', 'break', 'done'].includes(currentView)) setView('dashboard');
 }
 
 // ---------- RENDER: DASHBOARD ----------
@@ -220,6 +221,20 @@ function renderBreak() {
   tickTimers();
 }
 
+function renderDone() {
+  const cfg = snap.config || {};
+  const focused = Math.round((snap.blocksCompleted || 0) * (cfg.workMinutes || 0));
+  $('#rollupIntent').textContent = snap.intent ? `“${snap.intent}”` : 'Nice work.';
+  $('#rollupGrid').innerHTML = [
+    { v: `${snap.blocksCompleted || 0}`, l: 'Blocks completed' },
+    { v: hm(focused), l: 'Focused' },
+    { v: `+${focused}`, l: 'XP earned' },
+    { v: `${stats.streak}`, l: 'Day streak' },
+  ]
+    .map((c) => `<div class="rollup-cell"><div class="v">${c.v}</div><div class="l">${c.l}</div></div>`)
+    .join('');
+}
+
 // ---------- LIVE TIMERS ----------
 let nudgedAt = 0;
 function tickTimers() {
@@ -250,6 +265,7 @@ function renderView(view) {
   else if (view === 'setup') renderSetup();
   else if (view === 'work') renderWork();
   else if (view === 'break') renderBreak();
+  else if (view === 'done') renderDone();
 }
 
 // ---------- SETTINGS UPDATES ----------
@@ -343,6 +359,11 @@ browser.runtime.onMessage.addListener((message) => {
   } else if (message?.type === MSG.SETTINGS_CHANGED) {
     settings = message.settings;
     applyTheme();
+  } else if (message?.type === MSG.STATS_CHANGED) {
+    stats = message.stats;
+    if (currentView === 'dashboard') renderDashboard();
+    else if (currentView === 'work') renderWork();
+    else if (currentView === 'done') renderDone();
   }
 });
 

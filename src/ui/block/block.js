@@ -9,6 +9,7 @@ const eyebrowEl = document.getElementById('eyebrow');
 const footEl = document.getElementById('foot');
 
 let snap = null;
+let reported = false;
 
 function fmt(ms) {
   const total = Math.max(0, Math.round(ms / 1000));
@@ -30,6 +31,12 @@ async function refresh() {
     // Break started (or session stopped): release the page.
     history.back();
     return;
+  }
+
+  // Count this interception once (now that we've confirmed blocking is active).
+  if (!reported) {
+    reported = true;
+    browser.runtime.sendMessage({ type: MSG.BLOCKED_HIT }).catch(() => {});
   }
 
   intentEl.textContent = snap.intent ? `“${snap.intent}”` : '';

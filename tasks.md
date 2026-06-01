@@ -111,16 +111,19 @@ Goal: the real, beautiful surfaces from the spec, wired to live state.
 
 ---
 
-## Phase 6 — Gamification & persistence
+## Phase 6 — Gamification & persistence ✅
 Goal: the numbers that pull users back.
 
-- [ ] XP per completed block; levels with names; progress bar.
-- [ ] Day streak (consecutive days with a completed session).
-- [ ] Focus-this-week hours + trend; sessions today (done/planned); distractions blocked counter.
-- [ ] 28-day focus wall (contribution grid) in Command Mode.
-- [ ] End-of-session stats roll-up screen.
+- [x] Session machine emits `workComplete` / `sessionDone` events (flushed on commit); `skip()` on a work block earns no credit.
+- [x] Background increments on `workComplete`: XP (1/min), `totalFocusMinutes`, and `daily[today]` (feeds the focus wall).
+- [x] Day streak on `sessionDone` (continues if last session was yesterday, else resets to 1); `displayStats()` shows 0 when the streak has lapsed.
+- [x] Sessions-today counter (day-scoped, auto-resets); distractions-blocked counter via `BLOCKED_HIT` reported by the block page (once per interception).
+- [x] Focus-this-week derived from `daily`; 28-day focus wall lights up in Command Mode.
+- [x] End-of-session **roll-up view** (blocks, focused time, XP earned, streak) + "Back to dashboard".
+- [x] `STATS_CHANGED` broadcast → dashboard/popup update live; all stats persisted in `browser.storage.local`.
 
 **DoD:** Completing sessions visibly increments XP/streak/blocked-count and lights up the focus wall; survives restart.
+> Builds clean (chrome+firefox). Use the Test rhythm to see a full loop quickly. Verify in browser at the end.
 
 ---
 

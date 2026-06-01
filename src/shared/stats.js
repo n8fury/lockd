@@ -8,7 +8,7 @@ export const DEFAULT_STATS = {
   streak: 0,
   lastSessionDay: null, // 'YYYY-MM-DD'
   sessionsToday: 0,
-  sessionsPlanned: 0,
+  sessionsDay: null, // day the sessionsToday counter belongs to
   distractionsBlocked: 0,
   totalFocusMinutes: 0,
   xp: 0,
@@ -59,6 +59,22 @@ export async function saveStats(stats) {
   const merged = mergeStats(stats);
   await setItem(STORAGE_KEYS.STATS, merged);
   return merged;
+}
+
+/**
+ * Normalize stored stats for display "as of today": a streak only counts if the
+ * last completed session was today or yesterday, and sessionsToday resets when
+ * the day rolls over. Does not mutate stored values.
+ */
+export function displayStats(stats) {
+  const today = dayKey();
+  const yesterday = dayKey(new Date(Date.now() - 86_400_000));
+  const streakAlive = stats.lastSessionDay === today || stats.lastSessionDay === yesterday;
+  return {
+    ...stats,
+    streak: streakAlive ? stats.streak : 0,
+    sessionsToday: stats.sessionsDay === today ? stats.sessionsToday : 0,
+  };
 }
 
 export function dayKey(date = new Date()) {

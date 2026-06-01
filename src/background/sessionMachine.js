@@ -22,9 +22,15 @@ const MIN = 60_000;
 
 let session = makeIdleSession();
 let onChange = () => {}; // set by registerOnChange; used to broadcast + drive blocking later
+let onEvent = async () => {}; // set by registerOnEvent; receives stat events
+const pending = []; // stat events produced during a transition, flushed on commit
 
 export function registerOnChange(fn) {
   onChange = fn;
+}
+
+export function registerOnEvent(fn) {
+  onEvent = fn;
 }
 
 export function getSession() {
@@ -39,6 +45,18 @@ async function persist() {
   await setItem(STORAGE_KEYS.SESSION, session);
 }
 
+async function flushEvents() {
+  if (pending.length === 0) return;
+  const events = pending.splice(0, pending.length);
+  for (const e of events) {
+    try {
+      await onEvent(e);
+    } catch (err) {
+      console.error('[Lockd] onEvent handler failed', err);
+    }
+  }
+}
+
 async function commit() {
   await persist();
   try {
@@ -46,6 +64,7 @@ async function commit() {
   } catch (err) {
     console.error('[Lockd] onChange handler failed', err);
   }
+  await flushEvents();
 }
 
 async function scheduleAlarm() {
@@ -57,16 +76,21 @@ async function scheduleAlarm() {
   }
 }
 
-/** Advance exactly one phase. Returns true if the session is still active after. */
-function advanceOne() {
+/**
+ * Advance exactly one phase. Returns true if the session is still active after.
+ * @param {boolean} credit whether a finished work block earns stats (false when skipped)
+ */
+function advanceOne(credit = true) {
   const finished = currentPhase(session);
-  if (finished?.type === STATUS.WORK) {
+  if (finished?.type === STATUS.WORK && credit) {
     session.blocksCompleted += 1;
+    pending.push({ type: 'workComplete', minutes: finished.minutes });
   }
   const nextIndex = session.phaseIndex + 1;
   if (nextIndex >= session.sequence.length) {
     session.status = STATUS.DONE;
     session.phaseEndsAt = 0;
+    pending.push({ type: 'sessionDone', blocksCompleted: session.blocksCompleted });
     return false;
   }
   const next = session.sequence[nextIndex];
@@ -126,7 +150,7 @@ export async function resume() {
 
 export async function skip() {
   if (!isActive(session)) return getSnapshot();
-  advanceOne();
+  advanceOne(false); // skipping a work block does not earn credit
   await scheduleAlarm();
   await commit();
   return getSnapshot();

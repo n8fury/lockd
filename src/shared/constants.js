@@ -24,6 +24,8 @@ export const MSG = {
   GET_SETTINGS: 'GET_SETTINGS',
   UPDATE_SETTINGS: 'UPDATE_SETTINGS',
   GET_STATS: 'GET_STATS',
+  STATS_CHANGED: 'STATS_CHANGED', // broadcast from background
+  BLOCKED_HIT: 'BLOCKED_HIT', // a navigation was blocked (from block page)
 };
 
 // Blocking modes:

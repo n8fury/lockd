@@ -153,6 +153,15 @@
           <button class="btn danger" data-action="exit">End session</button>
         </div>
       </section>
+
+      <!-- DONE / ROLL-UP -->
+      <section class="view done" data-view="done">
+        <div class="rollup-mark">✦</div>
+        <h1 class="font-serif rollup-title">Session complete.</h1>
+        <p class="sub" id="rollupIntent"></p>
+        <div class="rollup-grid" id="rollupGrid"></div>
+        <button class="cta" data-action="goto-dashboard">Back to dashboard</button>
+      </section>
     </main>
 
     <script type="module" src="./dashboard.js"></script>

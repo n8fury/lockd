@@ -3,17 +3,28 @@
 import browser from 'webextension-polyfill';
 import { MSG, ALARM_PHASE } from '../shared/constants.js';
 import { loadSettings, saveSettings } from '../shared/settings.js';
-import { loadStats } from '../shared/stats.js';
+import { loadStats, saveStats, displayStats, dayKey } from '../shared/stats.js';
 import * as machine from './sessionMachine.js';
 import { applyBlocking } from './blocking.js';
 
 console.log('[Lockd] background alive');
 
 let settings = null;
+let stats = null;
 
 async function ensureSettings() {
   if (!settings) settings = await loadSettings();
   return settings;
+}
+
+async function ensureStats() {
+  if (!stats) stats = await loadStats();
+  return stats;
+}
+
+async function commitStats() {
+  await saveStats(stats);
+  broadcast({ type: MSG.STATS_CHANGED, stats: displayStats(stats) });
 }
 
 // Re-apply blocking to match the latest session snapshot + settings.
@@ -44,6 +55,33 @@ async function broadcast(message) {
 machine.registerOnChange((snap) => {
   broadcast({ type: MSG.STATE_CHANGED, snapshot: snap });
   reapplyBlocking(snap).catch((err) => console.error('[Lockd] blocking apply failed', err));
+});
+
+// Stat events from the session machine → update XP / focus minutes / streak / sessions.
+machine.registerOnEvent(async (event) => {
+  await ensureStats();
+  if (event.type === 'workComplete') {
+    const mins = Math.round(event.minutes);
+    if (mins > 0) {
+      const key = dayKey();
+      stats.totalFocusMinutes += mins;
+      stats.daily[key] = (stats.daily[key] || 0) + mins;
+      stats.xp += mins; // 1 XP per focused minute
+    }
+  } else if (event.type === 'sessionDone') {
+    const today = dayKey();
+    const yesterday = dayKey(new Date(Date.now() - 86_400_000));
+    if (stats.lastSessionDay !== today) {
+      stats.streak = (stats.lastSessionDay === yesterday ? stats.streak : 0) + 1;
+      stats.lastSessionDay = today;
+    }
+    if (stats.sessionsDay !== today) {
+      stats.sessionsDay = today;
+      stats.sessionsToday = 0;
+    }
+    stats.sessionsToday += 1;
+  }
+  await commitStats();
 });
 
 async function boot() {
@@ -91,7 +129,13 @@ browser.runtime.onMessage.addListener((message) => {
     case MSG.GET_SETTINGS:
       return ensureSettings();
     case MSG.GET_STATS:
-      return loadStats();
+      return ensureStats().then((s) => displayStats(s));
+    case MSG.BLOCKED_HIT:
+      return ensureStats().then(async () => {
+        stats.distractionsBlocked += 1;
+        await commitStats();
+        return { ok: true };
+      });
     case MSG.UPDATE_SETTINGS:
       return saveSettings(message.settings).then(async (merged) => {
         settings = merged;
