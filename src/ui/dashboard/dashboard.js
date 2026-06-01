@@ -5,6 +5,7 @@ import { MSG, STATUS } from '../../shared/constants.js';
 import { PRESETS, isPresetEnabled } from '../../rules/presets.js';
 import { normalizeDomain } from '../../shared/settings.js';
 import { levelInfo, focusWall, weekMinutes, dayKey } from '../../shared/stats.js';
+import { confirmExit } from '../exitFriction.js';
 
 let snap = null;
 let settings = null;
@@ -312,9 +313,18 @@ document.addEventListener('click', async (e) => {
     case 'pause':
       snap = await send(snap.status === STATUS.PAUSED ? MSG.RESUME : MSG.PAUSE);
       return renderWork();
-    case 'exit':
+    case 'exit': {
+      const done = snap.blocksCompleted || 0;
+      const ok = await confirmExit({
+        consequence:
+          `${snap.intent ? `“${snap.intent}” — ` : ''}` +
+          `${done} block${done === 1 ? '' : 's'} done won't count, and the session won't complete. ` +
+          `It earns no streak and no XP.`,
+      });
+      if (!ok) return;
       snap = await send(MSG.STOP);
       return setView('dashboard');
+    }
     case 'extend': snap = await send(MSG.EXTEND_BREAK, { minutes: 5 }); return renderBreak();
     case 'skip-break': snap = await send(MSG.SKIP); return autoRoute();
     case 'block-add': {

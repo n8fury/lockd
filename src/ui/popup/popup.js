@@ -3,6 +3,7 @@
 // quick sessions and controls a running one.
 import browser from 'webextension-polyfill';
 import { MSG, STATUS } from '../../shared/constants.js';
+import { confirmExit } from '../exitFriction.js';
 
 const el = {
   pill: document.getElementById('statusPill'),
@@ -103,7 +104,12 @@ el.controls.addEventListener('click', async (e) => {
   switch (action) {
     case 'pause': snap = await send(MSG.PAUSE); break;
     case 'resume': snap = await send(MSG.RESUME); break;
-    case 'stop': snap = await send(MSG.STOP); break;
+    case 'stop': {
+      const ok = await confirmExit();
+      if (!ok) { render(); return; }
+      snap = await send(MSG.STOP);
+      break;
+    }
     case 'extend': snap = await send(MSG.EXTEND_BREAK, { minutes: 5 }); break;
     case 'skip': snap = await send(MSG.SKIP); break;
     case 'open-setup': return openDashboard('setup');

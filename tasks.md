@@ -127,14 +127,16 @@ Goal: the numbers that pull users back.
 
 ---
 
-## Phase 7 — Exit friction & honesty
+## Phase 7 — Exit friction & honesty ✅
 Goal: respect the "no easy escape hatch" principle within an extension's limits.
 
-- [ ] One deliberately-annoying mid-session disable (type-a-phrase or timed countdown) — not a soft pause.
-- [ ] Honest in-app note about browser-only scope (native apps/phone out of scope for v1).
-- [ ] Optional guilt/streak-loss confirmation on early quit.
+- [x] `ui/exitFriction.js` — reusable `confirmExit()` modal requiring BOTH an 8s countdown AND typing a guilt-tinged phrase ("i am giving up"); self-styling via theme tokens so popup + dashboard share it.
+- [x] Honest browser-only scope note on the dashboard (native apps/phone out of scope; the work happens where the scrolling does).
+- [x] Loss warning baked into the modal: states blocks-done won't count, no streak, no XP (dashboard variant names the intent + block count).
+- [x] Gated every session-end: dashboard work/break "End session" and popup "End" both route through the friction (pause stays a soft control).
 
 **DoD:** Disabling a live session requires deliberate friction; quitting early warns about streak loss.
+> Builds clean (chrome+firefox). Verify the modal feel in browser at the end.
 
 ---
 
