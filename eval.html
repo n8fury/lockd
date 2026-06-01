@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lockd — Evaluation & Test Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@200;300;400;500;600;700&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: #0A0420;
+  --bg-deep: #120832;
+  --bg-elev: #1A0F3D;
+  --bg-card: #221547;
+  --border: rgba(180, 160, 255, 0.10);
+  --border-strong: rgba(180, 160, 255, 0.20);
+  --text: #F0EAFF;
+  --text-muted: #9B92C9;
+  --text-dim: #6B6299;
+  --text-faint: #443D6E;
+  --sage: #A8D5BA;
+  --coral: #FF7A6E;
+  --amber: #F5B547;
+  --cyan: #6FC8E8;
+  --violet: #B47CFF;
+  --pink: #FF6BCB;
+  --violet-soft: rgba(180, 124, 255, 0.14);
+  --sage-soft: rgba(168, 213, 186, 0.12);
+  --coral-soft: rgba(255, 122, 110, 0.14);
+  --amber-soft: rgba(245, 181, 71, 0.14);
+  --cyan-soft: rgba(111, 200, 232, 0.14);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: 'Geist', -apple-system, sans-serif;
+  background:
+    radial-gradient(ellipse 1200px 800px at 100% 0%, rgba(180, 124, 255, 0.12), transparent 55%),
+    radial-gradient(ellipse 1000px 700px at 0% 100%, rgba(255, 107, 203, 0.06), transparent 60%),
+    linear-gradient(165deg, var(--bg-deep) 0%, var(--bg) 100%);
+  background-attachment: fixed;
+  color: var(--text);
+  line-height: 1.6;
+  font-size: 15px;
+}
+.wrap { max-width: 880px; margin: 0 auto; padding: 72px 32px 120px; }
+
+/* HERO */
+.hero { text-align: center; padding: 24px 0 56px; border-bottom: 0.5px solid var(--border); margin-bottom: 56px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px;
+  background: var(--violet-soft); border: 0.5px solid var(--border-strong); border-radius: 100px;
+  font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--violet); margin-bottom: 24px;
+}
+.mark {
+  width: 60px; height: 60px; border-radius: 16px; margin: 0 auto 20px;
+  background: linear-gradient(135deg, var(--violet), var(--pink));
+  display: flex; align-items: center; justify-content: center; color: #fff; font-size: 28px;
+  box-shadow: 0 12px 40px rgba(180, 124, 255, 0.4);
+}
+.hero h1 { font-family: 'Instrument Serif', serif; font-size: 56px; font-weight: 400; margin: 0 0 10px; letter-spacing: -0.02em; line-height: 1; }
+.hero .tagline { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 21px; color: var(--text-muted); margin: 0 0 20px; }
+.hero .meta { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--text-dim); letter-spacing: 0.05em; }
+
+/* TOC */
+.toc { background: var(--bg-elev); border: 0.5px solid var(--border); border-radius: 16px; padding: 22px 26px; margin-bottom: 56px; }
+.toc-title { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); margin: 0 0 14px; }
+.toc a { display: flex; justify-content: space-between; padding: 7px 0; color: var(--text-muted); text-decoration: none; border-bottom: 0.5px solid var(--border); font-size: 14px; transition: color 0.15s; }
+.toc a:last-child { border-bottom: none; }
+.toc a:hover { color: var(--violet); }
+.toc a .n { font-family: 'Geist Mono', monospace; color: var(--text-faint); }
+
+section { margin-bottom: 60px; scroll-margin-top: 24px; }
+.sec-num { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--violet); letter-spacing: 0.2em; margin-bottom: 8px; }
+h2 { font-family: 'Instrument Serif', serif; font-size: 34px; font-weight: 400; margin: 0 0 10px; letter-spacing: -0.02em; }
+h3 { font-size: 16px; font-weight: 600; margin: 28px 0 10px; color: var(--text); }
+.intro { color: var(--text-muted); font-size: 16px; margin: 0 0 24px; max-width: 640px; }
+p { color: var(--text-muted); }
+strong { color: var(--text); font-weight: 600; }
+code { font-family: 'Geist Mono', monospace; font-size: 0.86em; background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 5px; padding: 1px 6px; color: var(--cyan); }
+kbd { font-family: 'Geist Mono', monospace; font-size: 0.82em; background: var(--bg-card); border: 0.5px solid var(--border-strong); border-bottom-width: 2px; border-radius: 6px; padding: 2px 7px; color: var(--text); }
+
+/* CARDS */
+.card { background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent), var(--bg-elev); border: 0.5px solid var(--border); border-radius: 16px; padding: 22px 26px; margin: 18px 0; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+.card h3 { margin-top: 0; }
+.card.accent { border-left: 3px solid var(--violet); }
+
+/* STEP LISTS */
+ol.steps { counter-reset: step; list-style: none; padding: 0; margin: 14px 0; }
+ol.steps li { position: relative; padding: 6px 0 6px 38px; color: var(--text-muted); margin-bottom: 4px; }
+ol.steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 5px; width: 24px; height: 24px; border-radius: 7px; background: var(--violet-soft); color: var(--violet); font-family: 'Geist Mono', monospace; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+
+ul.clean { list-style: none; padding: 0; margin: 14px 0; }
+ul.clean li { position: relative; padding: 7px 0 7px 26px; color: var(--text-muted); border-bottom: 0.5px solid var(--border); }
+ul.clean li:last-child { border-bottom: none; }
+ul.clean li::before { content: ''; position: absolute; left: 3px; top: 15px; width: 6px; height: 6px; border-radius: 50%; background: var(--violet); box-shadow: 0 0 8px rgba(180,124,255,0.5); }
+
+/* EXPECT line */
+.expect { display: flex; gap: 10px; align-items: flex-start; margin-top: 10px; padding: 10px 14px; background: var(--sage-soft); border: 0.5px solid rgba(168,213,186,0.25); border-radius: 10px; font-size: 14px; }
+.expect b { color: var(--sage); font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; flex-shrink: 0; padding-top: 2px; }
+.expect span { color: var(--text-muted); }
+
+/* TABLE */
+.tbl { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 14px; border-radius: 12px; overflow: hidden; border: 0.5px solid var(--border); }
+.tbl th { background: var(--bg-card); padding: 12px 14px; text-align: left; font-size: 11px; font-family: 'Geist Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); font-weight: 500; }
+.tbl td { padding: 12px 14px; border-top: 0.5px solid var(--border); color: var(--text-muted); vertical-align: top; }
+.tbl td strong { color: var(--text); }
+
+/* PILLS */
+.pill { display: inline-block; padding: 2px 10px; border-radius: 100px; font-size: 11px; font-family: 'Geist Mono', monospace; font-weight: 500; }
+.pill.green { background: var(--sage-soft); color: var(--sage); }
+.pill.violet { background: var(--violet-soft); color: var(--violet); }
+.pill.amber { background: var(--amber-soft); color: var(--amber); }
+.pill.cyan { background: var(--cyan-soft); color: var(--cyan); }
+
+/* CALLOUT */
+.callout { display: flex; gap: 14px; background: var(--amber-soft); border: 0.5px solid rgba(245, 181, 71, 0.3); border-radius: 14px; padding: 16px 18px; margin: 18px 0; }
+.callout .ic { color: var(--amber); font-size: 18px; flex-shrink: 0; font-family: 'Geist Mono', monospace; }
+.callout p { margin: 0; font-size: 14px; }
+.callout.danger { background: var(--coral-soft); border-color: rgba(255, 122, 110, 0.3); }
+.callout.danger .ic { color: var(--coral); }
+.callout.info { background: var(--cyan-soft); border-color: rgba(111, 200, 232, 0.3); }
+.callout.info .ic { color: var(--cyan); }
+
+/* CODE BLOCK */
+pre { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px 18px; overflow-x: auto; font-family: 'Geist Mono', monospace; font-size: 13px; color: var(--text); line-height: 1.7; margin: 14px 0; }
+pre .c { color: var(--text-dim); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 680px) { .two-col { grid-template-columns: 1fr; } .hero h1 { font-size: 40px; } .wrap { padding: 48px 20px 80px; } }
+
+footer { text-align: center; padding-top: 44px; border-top: 0.5px solid var(--border); color: var(--text-dim); font-size: 13px; }
+.feat-head { display: flex; align-items: center; gap: 10px; }
+.feat-head .tag { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--text-faint); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="badge">◆ Test Guide · v0.0.1</div>
+  <div class="mark">◆</div>
+  <h1>Lockd — Evaluation</h1>
+  <p class="tagline">What you can do in this build, and exactly how to test it.</p>
+  <p class="meta">Cross-browser MV3 extension · Chromium + Firefox · Phases 0–8 complete</p>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <p class="toc-title">Contents</p>
+  <a href="#load"><span>Load the extension</span><span class="n">01</span></a>
+  <a href="#smoke"><span>The 60-second smoke test</span><span class="n">02</span></a>
+  <a href="#features"><span>Feature-by-feature tests</span><span class="n">03</span></a>
+  <a href="#persist"><span>Persistence &amp; recovery</span><span class="n">04</span></a>
+  <a href="#cross"><span>Cross-browser</span><span class="n">05</span></a>
+  <a href="#caveats"><span>Known caveats</span><span class="n">06</span></a>
+  <a href="#reset"><span>Reset state</span><span class="n">07</span></a>
+  <a href="#fast"><span>Fastest full pass</span><span class="n">08</span></a>
+</div>
+
+<!-- 01 LOAD -->
+<section id="load">
+  <p class="sec-num">01</p>
+  <h2>Load the extension</h2>
+  <p class="intro">Unpacked, from the built output. Build first with <code>npm run build</code>.</p>
+
+  <div class="two-col">
+    <div class="card">
+      <h3>Chrome / Edge / Brave / Arc</h3>
+      <ol class="steps">
+        <li>Open <code>chrome://extensions</code></li>
+        <li>Toggle <strong>Developer mode</strong> (top-right)</li>
+        <li><strong>Load unpacked</strong> → select <code>dist/chrome</code></li>
+        <li>Pin Lockd to the toolbar</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3>Firefox</h3>
+      <ol class="steps">
+        <li>Open <code>about:debugging#/runtime/this-firefox</code></li>
+        <li><strong>Load Temporary Add-on…</strong></li>
+        <li>Select <code>dist/firefox/manifest.json</code></li>
+        <li>Reload it after a Firefox restart (temporary add-ons clear)</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <span class="ic">↻</span>
+    <p>After changing code: run <code>npm run build</code>, then click <strong>reload</strong> on the extension card (Chrome) or <strong>Reload</strong> (Firefox).</p>
+  </div>
+</section>
+
+<!-- 02 SMOKE -->
+<section id="smoke">
+  <p class="sec-num">02</p>
+  <h2>The 60-second smoke test</h2>
+  <p class="intro">Confirms the whole loop is alive before you dig in.</p>
+  <ol class="steps">
+    <li>Click the toolbar icon → popup shows <strong>idle</strong>, <code>--:--</code>, "No active session".</li>
+    <li>Click <strong>Open dashboard →</strong>. Dashboard opens in a tab (dark theme).</li>
+    <li>Top-right: click <strong>◑ Light</strong> then <strong>◐ Dark</strong> — the whole UI reskins and the choice sticks.</li>
+    <li>Click <strong>New session</strong> → pick <span class="pill violet">Test</span> duration + <span class="pill violet">Test</span> rhythm → type an intent → <strong>Lock in →</strong>.</li>
+    <li>You land in <strong>Work</strong> with a live countdown; it auto-flips work → break → work and finishes on the <strong>Session complete</strong> roll-up.</li>
+  </ol>
+  <div class="expect"><b>Expect</b><span>If that works, the core engine, UI routing, theming, and the session loop are all functioning.</span></div>
+</section>
+
+<!-- 03 FEATURES -->
+<section id="features">
+  <p class="sec-num">03</p>
+  <h2>Feature-by-feature tests</h2>
+  <p class="intro">Each block: what it is, how to drive it, and what to expect.</p>
+
+  <!-- A -->
+  <div class="card accent">
+    <div class="feat-head"><h3>A · Sessions &amp; the work/break loop</h3></div>
+    <p>Timed work blocks (locked) alternating with breaks (unlocked), auto-resuming until the total duration is used up.</p>
+    <ol class="steps">
+      <li>Dashboard → New session → <strong>Test</strong> duration (~30s total) + <strong>Test</strong> rhythm (~6s work / ~4s break) → Lock in.</li>
+    </ol>
+    <div class="expect"><b>Expect</b><span>Timer counts down; pill reads "Focus locked" in work and "Everything unlocked" in break; the view auto-switches; ends on the roll-up.</span></div>
+    <div class="callout danger" style="margin-bottom:0;">
+      <span class="ic">!</span>
+      <p><strong>Keep the dashboard or popup open during Test runs.</strong> Sub-minute transitions are nudged by the open UI; with everything closed the browser can delay very short alarms.</p>
+    </div>
+  </div>
+
+  <!-- B -->
+  <div class="card accent">
+    <h3>B · Calm vs Command work surface</h3>
+    <p>Two work UIs. <strong>Calm</strong> = giant 160px timer, nothing else. <strong>Command</strong> = smaller timer + live stat tiles + a 28-day focus wall.</p>
+    <ul class="clean">
+      <li>Pick <strong>🛰️ Command</strong> in Setup, or use the <strong>Calm / Command</strong> toggle at the top of the Work view mid-session.</li>
+    </ul>
+    <div class="expect"><b>Expect</b><span>Command reveals four stat tiles + the focus-wall grid; Calm hides them. Instant switch, persists.</span></div>
+  </div>
+
+  <!-- C -->
+  <div class="card accent">
+    <h3>C · Count direction toggle</h3>
+    <p>Show <strong>time left</strong> (countdown) or <strong>focused</strong> (count-up).</p>
+    <ul class="clean"><li>In Work view, click <strong>Show focused</strong> / <strong>Show time left</strong>.</li></ul>
+    <div class="expect"><b>Expect</b><span>The big timer flips between remaining and elapsed for the current block.</span></div>
+  </div>
+
+  <!-- D -->
+  <div class="card accent">
+    <h3>D · Pause / resume / skip / extend</h3>
+    <ul class="clean">
+      <li><strong>Work → Pause:</strong> timer freezes, pill shows "Paused", button becomes <strong>Resume</strong>.</li>
+      <li><strong>Break → +5 min:</strong> adds time. <strong>Skip break →</strong> jumps to the next work block.</li>
+    </ul>
+    <div class="expect"><b>Expect</b><span>Pause is a soft control (no friction). Skipping a work block earns <strong>no</strong> XP/credit (anti-cheat).</span></div>
+  </div>
+
+  <!-- E -->
+  <div class="card accent">
+    <h3>E · Element-level blocking <span class="pill violet">the differentiator</span></h3>
+    <p>During work, curated CSS hides distraction elements while keeping the site usable. Defaults <strong>on</strong>: YouTube home feed, recommendations, Shorts, end-screen; Instagram Reels/Explore; X "For You"/trending/explore; Reddit feed/popular nav. (YouTube <strong>comments</strong> and Instagram <strong>suggested</strong> default off.)</p>
+    <ol class="steps">
+      <li>Start any session (popup <strong>Quick start</strong> works).</li>
+      <li>During a work block, open <code>youtube.com</code> → homepage feed gone; open a video → recommendations sidebar &amp; Shorts gone.</li>
+      <li>In dashboard <strong>Distraction presets</strong>, toggle "Recommendations sidebar" off → return to YouTube; it's back — <strong>no session restart needed</strong>.</li>
+      <li>Let it hit a <strong>break</strong> → all trimmed elements reappear.</li>
+    </ol>
+    <div class="expect"><b>Expect</b><span>Trims apply only during work/always-on; restored on break/idle; toggles update live.</span></div>
+  </div>
+
+  <!-- F -->
+  <div class="card accent">
+    <h3>F · Whole-site blocking</h3>
+    <p>Hard-block entire domains during focus → redirect to the in-extension block page. Defaults: <code>tiktok.com</code>, <code>facebook.com</code>.</p>
+    <ol class="steps">
+      <li>Start a session.</li>
+      <li>Visit <code>tiktok.com</code> during work → land on the <strong>block page</strong> ("This one can wait." + "Break in mm:ss").</li>
+      <li>Add your own domain under <strong>Hard-blocked sites</strong> (e.g. <code>example.com</code> → Add) → visit it during work → blocked.</li>
+      <li>When the break starts, the block page <strong>auto-returns</strong> you.</li>
+    </ol>
+    <div class="expect"><b>Expect</b><span>Blocks only during work/always-on; the block page countdown ticks to the break.</span></div>
+  </div>
+
+  <!-- G -->
+  <div class="card accent">
+    <h3>G · YouTube channel lock</h3>
+    <p>Allow only specific channels; block every other YouTube video/channel during focus.</p>
+    <ol class="steps">
+      <li>Dashboard → <strong>YouTube channel lock</strong> → switch on → add a channel (<code>@LofiGirl</code> or a <code>/channel/UC…</code> URL).</li>
+      <li>Start a session.</li>
+      <li>Open a video from a <strong>different</strong> channel during work → redirected to the block page.</li>
+      <li>Open the <strong>allowed</strong> channel → plays normally.</li>
+    </ol>
+    <div class="expect"><b>Expect</b><span>Home/search stay reachable (feed hidden by preset); only channel/watch pages are gated. Lock only bites when the list is non-empty.</span></div>
+  </div>
+
+  <!-- H -->
+  <div class="card accent">
+    <h3>H · Always-on focus</h3>
+    <p>Blocking stays active regardless of any session.</p>
+    <ul class="clean">
+      <li>Popup → toggle <strong>Always-on focus</strong> on (no session needed) → visit <code>tiktok.com</code> → blocked; the block page shows <strong>∞</strong> instead of a countdown. Toggle off → unblocked.</li>
+    </ul>
+  </div>
+
+  <!-- I -->
+  <div class="card accent">
+    <h3>I · Exit friction <span class="pill amber">no easy off-switch</span></h3>
+    <p>Ending a session early is deliberately hard.</p>
+    <ul class="clean"><li>In Work or Break, click <strong>End session</strong> (or <strong>End</strong> in the popup).</li></ul>
+    <div class="expect"><b>Expect</b><span>A modal appears — confirm stays disabled for an <strong>8s countdown</strong> <em>and</em> until you type <kbd>i am giving up</kbd>. "Keep going" cancels. Only then does it stop.</span></div>
+  </div>
+
+  <!-- J -->
+  <div class="card accent">
+    <h3>J · Gamification &amp; stats</h3>
+    <p>Day streak, focus-this-week, sessions today, distractions blocked, XP/levels, 28-day focus wall, end-of-session roll-up.</p>
+    <h3 style="margin-top:14px;">Easy to verify now</h3>
+    <ul class="clean">
+      <li><strong>Distractions blocked</strong> — each block-page hit increments (watch the dashboard card / Command tile update live).</li>
+      <li><strong>Sessions today &amp; Day streak</strong> — complete a session (let all blocks finish) → both increment; roll-up shows the summary.</li>
+    </ul>
+    <div class="callout danger" style="margin-bottom:0;">
+      <span class="ic">!</span>
+      <p><strong>XP, "Focus this week", and the focus wall need real minutes.</strong> They come from completed work-block minutes <em>rounded to whole minutes</em>. The Test rhythm's 6-second blocks round to <strong>0</strong>, so they won't move on test runs — run a real block (e.g. 25/5, let one 25-min block finish) to see them change. Quirk of quick-testing, not a bug.</p>
+    </div>
+  </div>
+
+  <!-- K -->
+  <div class="card accent">
+    <h3>K · Themes</h3>
+    <ul class="clean"><li>Dashboard top-right Dark/Light toggle. Applies across popup, dashboard, and block page; persists across reloads.</li></ul>
+  </div>
+</section>
+
+<!-- 04 PERSIST -->
+<section id="persist">
+  <p class="sec-num">04</p>
+  <h2>Persistence &amp; recovery</h2>
+  <p class="intro">The part most extensions get wrong under MV3. Worth testing deliberately.</p>
+  <table class="tbl">
+    <tr><th>Test</th><th>How</th><th>Expect</th></tr>
+    <tr><td><strong>Survives reload</strong></td><td>Start a real session (50/10), reload Lockd on <code>chrome://extensions</code>, reopen the popup.</td><td>Session still running with correct remaining time.</td></tr>
+    <tr><td><strong>Survives worker sleep</strong></td><td>Start a session, leave it, return minutes later (Chrome sleeps the worker ~30s idle).</td><td>Timer correct; transitions that should have fired, fired.</td></tr>
+    <tr><td><strong>Stats persist</strong></td><td>Complete a session, close the browser, reopen.</td><td>Streak / sessions / blocked retained.</td></tr>
+  </table>
+</section>
+
+<!-- 05 CROSS -->
+<section id="cross">
+  <p class="sec-num">05</p>
+  <h2>Cross-browser</h2>
+  <p class="intro">Everything works the same in <code>dist/chrome</code> and <code>dist/firefox</code> (one codebase via the <code>browser.*</code> polyfill).</p>
+  <p>Worth a quick parallel run in Firefox of the <strong>block page</strong> (§F) and the <strong>YouTube trim</strong> (§E) to confirm parity.</p>
+</section>
+
+<!-- 06 CAVEATS -->
+<section id="caveats">
+  <p class="sec-num">06</p>
+  <h2>Known caveats</h2>
+  <p class="intro">So nothing surprises you during the pass.</p>
+  <ul class="clean">
+    <li><strong>Test rhythm + closed UI:</strong> very short (&lt;~30s) transitions can lag if <em>both</em> popup and dashboard are closed (the browser clamps tiny alarms). Real-length sessions are unaffected.</li>
+    <li><strong>XP / focus-wall need ≥1-minute blocks</strong> — test sessions won't move them (see §J).</li>
+    <li><strong>Native apps &amp; phone are out of scope</strong> — Lockd controls the browser only (stated honestly on the dashboard).</li>
+    <li><strong>Other browsers / incognito</strong> — an extension can be disabled or bypassed by switching browsers; the friction is in-app, not OS-level.</li>
+    <li><strong>Fonts</strong> load from Google Fonts; if blocked, the UI falls back to system fonts (layout holds).</li>
+    <li><strong>Selectors are best-effort</strong> — YouTube/IG/X/Reddit change their DOM; a preset may need a selector update after a redesign (tracked in the v1.1 backlog).</li>
+  </ul>
+</section>
+
+<!-- 07 RESET -->
+<section id="reset">
+  <p class="sec-num">07</p>
+  <h2>Reset state</h2>
+  <p class="intro">Clean slate when you want one. Stats, settings, presets, channels, and the current session all live in <code>browser.storage.local</code>.</p>
+  <ul class="clean">
+    <li><strong>Quickest:</strong> remove the extension and load it again.</li>
+    <li><strong>DevTools:</strong> on the dashboard page → Application → Storage → clear → reload.</li>
+  </ul>
+</section>
+
+<!-- 08 FAST -->
+<section id="fast">
+  <p class="sec-num">08</p>
+  <h2>Fastest full pass</h2>
+  <p class="intro">Covers all 8 phases in about 3 minutes.</p>
+  <div class="card">
+    <ol class="steps">
+      <li><strong>Quick-start</strong> from the popup.</li>
+      <li>Confirm <strong>YouTube trims</strong> + <strong>TikTok block page</strong>.</li>
+      <li>Toggle a <strong>preset off</strong> and watch it restore live.</li>
+      <li>Trigger the <strong>exit-friction modal</strong>.</li>
+      <li>Enable <strong>always-on</strong> and hit a block page (<strong>∞</strong>).</li>
+      <li>Run <strong>Test / Test</strong> with the dashboard open → watch the full loop land on the <strong>roll-up</strong>.</li>
+    </ol>
+  </div>
+  <div class="callout">
+    <span class="ic">◆</span>
+    <p>For the build/package commands themselves, see <code>README.md</code>. For the phased build log and the v1.1+ backlog, see <code>tasks.md</code>.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Lockd — Evaluation &amp; Test Guide · v0.0.1 · Phases 0–8 complete</p>
+</footer>
+
+</div>
+</body>
+</html>
