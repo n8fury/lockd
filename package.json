@@ -10,7 +10,10 @@
     "build:firefox": "cross-env BROWSER=firefox vite build",
     "build": "npm run build:chrome && npm run build:firefox",
     "watch:chrome": "cross-env BROWSER=chrome vite build --watch",
-    "watch:firefox": "cross-env BROWSER=firefox vite build --watch"
+    "watch:firefox": "cross-env BROWSER=firefox vite build --watch",
+    "icons": "node scripts/gen-icons.mjs",
+    "package": "npm run build && node scripts/package.mjs",
+    "lint:firefox": "web-ext lint --source-dir dist/firefox"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.0-beta.34",

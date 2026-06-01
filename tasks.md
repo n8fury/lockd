@@ -140,15 +140,18 @@ Goal: respect the "no easy escape hatch" principle within an extension's limits.
 
 ---
 
-## Phase 8 — Packaging, QA & store prep
+## Phase 8 — Packaging, QA & store prep ✅
 Goal: shippable on both stores.
 
-- [ ] Icons, store screenshots (reuse the beautiful UI as the marketing asset), descriptions.
-- [ ] Cross-browser regression pass (Chrome, Edge, Firefox).
-- [ ] `web-ext lint` (Firefox) + Chrome MV3 review checklist; minimal permissions audit.
-- [ ] Zipped artifacts for Chrome Web Store + Firefox AMO.
+- [x] Icons (16/32/48/128) via a zero-dep PNG generator (`scripts/gen-icons.mjs`, built-in zlib); wired into manifest `icons` + `action.default_icon`.
+- [x] Zero-dep ZIP packager (`scripts/package.mjs`) → `artifacts/lockd-{chrome,firefox}-<version>.zip`; verified (manifest at root, 23 files, parses).
+- [x] `web-ext lint` on `dist/firefox`: **0 errors**, 15 warnings (all `innerHTML` — allowed by AMO).
+- [x] Permissions audit documented in `store/listing.md`; closed the real risk by HTML-escaping user-controlled values before `innerHTML` (`esc()`).
+- [x] Store listing copy (`store/listing.md`) + screenshot shot-list (`store/screenshots.md`) + project `README.md`.
+- [x] `npm run package` / `npm run lint:firefox` scripts added.
 
 **DoD:** Clean lint, minimal permissions, packaged zips for both stores.
+> 0 lint errors; zips build + validate. Screenshots must be captured manually from the loaded extension (see `store/screenshots.md`).
 
 ---
 

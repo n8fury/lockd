@@ -33,6 +33,14 @@ const RHYTHMS = [
 const $ = (sel) => document.querySelector(sel);
 const send = (type, extra = {}) => browser.runtime.sendMessage({ type, ...extra });
 
+// Escape user-controlled values before they go into innerHTML (domains, channel
+// names, intent) — these are the only untrusted strings we render.
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+  );
+}
+
 function fmt(ms) {
   const total = Math.max(0, Math.round(ms / 1000));
   const m = Math.floor(total / 60);
@@ -138,7 +146,8 @@ function renderPresets() {
 }
 
 function chip(value, removeAttr) {
-  return `<li><span>${value}</span><span class="rm" data-${removeAttr}="${value}" title="Remove">✕</span></li>`;
+  const v = esc(value);
+  return `<li><span>${v}</span><span class="rm" data-${removeAttr}="${v}" title="Remove">✕</span></li>`;
 }
 
 function renderBlocklist() {
@@ -317,7 +326,7 @@ document.addEventListener('click', async (e) => {
       const done = snap.blocksCompleted || 0;
       const ok = await confirmExit({
         consequence:
-          `${snap.intent ? `“${snap.intent}” — ` : ''}` +
+          `${snap.intent ? `“${esc(snap.intent)}” — ` : ''}` +
           `${done} block${done === 1 ? '' : 's'} done won't count, and the session won't complete. ` +
           `It earns no streak and no XP.`,
       });

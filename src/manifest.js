@@ -15,9 +15,19 @@ export function getManifest(browser) {
     name: 'Lockd',
     version: VERSION,
     description: 'Locks you in — surgical focus blocking with work/break sessions.',
+    icons: {
+      16: 'src/icons/icon-16.png',
+      32: 'src/icons/icon-32.png',
+      48: 'src/icons/icon-48.png',
+      128: 'src/icons/icon-128.png',
+    },
     action: {
       default_popup: 'src/ui/popup/index.html',
       default_title: 'Lockd',
+      default_icon: {
+        16: 'src/icons/icon-16.png',
+        32: 'src/icons/icon-32.png',
+      },
     },
     options_ui: {
       page: 'src/ui/dashboard/index.html',
