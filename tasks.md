@@ -80,14 +80,18 @@ Goal: curated presets surgically hide distraction elements while keeping the sit
 
 ---
 
-## Phase 4 — Channel-level allowlist
+## Phase 4 — Channel-level allowlist ✅
 Goal: allow one specific YouTube channel/stream, block the rest.
 
-- [ ] Content script reads current YouTube channel/playlist identity.
-- [ ] If not in the allowlist during a work block → redirect to block page (search still allowed if configured).
-- [ ] Allowlist stored per session + globally.
+- [x] `content/youtubeChannel.js` resolves the current channel — from `/@`, `/channel/UC…`, `/c/`, `/user/` paths, or the owner link on `/watch` pages.
+- [x] `shared/settings.js` `normalizeChannel()` maps handles/ids/URLs to comparable tokens (`h:` / `id:`), shared by content script + UI.
+- [x] When `youtubeChannelLock` is on (+ non-empty allowlist) during a work block / always-on, non-allowlisted channels redirect to the block page (`location.replace`, no back-loop). Home/search untouched (feed hidden by preset).
+- [x] SPA-aware: re-checks on `yt-navigate-finish`/`popstate` + brief poll for late-loading `/watch` owner link; reacts to STATE/SETTINGS broadcasts.
+- [x] Settings: `youtubeChannelLock` flag + `youtubeChannels` list. Debug controls added to popup (lock toggle, add/remove channels) for testing.
+- [x] Manifest: second content script scoped to `*://*.youtube.com/*` (verified, 2 content scripts).
 
 **DoD:** Allow one lofi channel; that channel plays during work, any other YouTube video is blocked.
+> Builds clean (chrome+firefox). Verify in browser at the end.
 
 ---
 

@@ -31,7 +31,19 @@
         <span>Always-on focus</span>
       </label>
 
-      <p class="hint">Phase 1 · session machine (debug)</p>
+      <div class="ytlock">
+        <label class="toggle">
+          <input type="checkbox" id="ytLock" />
+          <span>YouTube channel lock</span>
+        </label>
+        <div class="ytrow">
+          <input type="text" id="ytInput" placeholder="@channel, /channel/UC…, or URL" />
+          <button class="btn" data-action="yt-add">Add</button>
+        </div>
+        <ul class="ytlist" id="ytList"></ul>
+      </div>
+
+      <p class="hint">Phase 4 · channel allowlist (debug)</p>
     </main>
     <script type="module" src="./popup.js"></script>
   </body>

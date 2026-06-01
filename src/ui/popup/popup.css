@@ -129,6 +129,52 @@ body {
 }
 .toggle input { accent-color: var(--violet); width: 15px; height: 15px; }
 
+.ytlock {
+  border-top: 0.5px solid var(--border);
+  margin-top: 10px;
+  padding-top: 8px;
+}
+
+.ytrow {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0 8px;
+}
+.ytrow input {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 7px 9px;
+}
+.ytrow input::placeholder { color: var(--text-dim); }
+.ytrow .btn { padding: 7px 12px; }
+
+.ytlist { list-style: none; margin: 0; padding: 0; }
+.ytlist li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 5px 0;
+  border-bottom: 0.5px solid var(--border);
+}
+.ytlist li:last-child { border-bottom: none; }
+.ytlist .rm {
+  cursor: pointer;
+  color: var(--coral);
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 4px;
+}
+.ytlist .empty { color: var(--text-dim); border-bottom: none; }
+
 .hint {
   font-family: ui-monospace, monospace;
   font-size: 9px;

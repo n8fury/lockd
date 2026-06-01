@@ -39,6 +39,13 @@ export function getManifest(browser) {
         run_at: 'document_start',
         all_frames: false,
       },
+      // Channel allowlist enforcement, YouTube only.
+      {
+        matches: ['*://*.youtube.com/*'],
+        js: ['src/content/youtubeChannel.js'],
+        run_at: 'document_start',
+        all_frames: false,
+      },
     ],
   };
 

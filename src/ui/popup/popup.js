@@ -8,9 +8,13 @@ const el = {
   sub: document.getElementById('sub'),
   controls: document.getElementById('controls'),
   alwaysOn: document.getElementById('alwaysOn'),
+  ytLock: document.getElementById('ytLock'),
+  ytInput: document.getElementById('ytInput'),
+  ytList: document.getElementById('ytList'),
 };
 
 let snap = null;
+let settings = null;
 let nudgedAt = 0;
 
 function send(type, extra = {}) {
@@ -71,9 +75,43 @@ function setEnabled(action, enabled) {
   if (btn) btn.disabled = !enabled;
 }
 
+function renderSettings() {
+  if (!settings) return;
+  el.ytLock.checked = !!settings.youtubeChannelLock;
+  const channels = settings.youtubeChannels || [];
+  el.ytList.innerHTML = '';
+  if (channels.length === 0) {
+    const li = document.createElement('li');
+    li.className = 'empty';
+    li.textContent = 'No channels allowed yet';
+    el.ytList.appendChild(li);
+    return;
+  }
+  for (const ch of channels) {
+    const li = document.createElement('li');
+    const name = document.createElement('span');
+    name.textContent = ch;
+    const rm = document.createElement('span');
+    rm.className = 'rm';
+    rm.textContent = '✕';
+    rm.title = 'Remove';
+    rm.addEventListener('click', () => updateSettings({
+      youtubeChannels: channels.filter((c) => c !== ch),
+    }));
+    li.append(name, rm);
+    el.ytList.appendChild(li);
+  }
+}
+
+async function updateSettings(patch) {
+  settings = await send(MSG.UPDATE_SETTINGS, { settings: { ...settings, ...patch } });
+  renderSettings();
+}
+
 async function refresh() {
-  snap = await send(MSG.GET_STATE);
+  [snap, settings] = await Promise.all([send(MSG.GET_STATE), send(MSG.GET_SETTINGS)]);
   render();
+  renderSettings();
 }
 
 el.controls.addEventListener('click', async (e) => {
@@ -102,6 +140,23 @@ el.controls.addEventListener('click', async (e) => {
 el.alwaysOn.addEventListener('change', async () => {
   snap = await send(MSG.TOGGLE_ALWAYS_ON, { value: el.alwaysOn.checked });
   render();
+});
+
+el.ytLock.addEventListener('change', () => {
+  updateSettings({ youtubeChannelLock: el.ytLock.checked });
+});
+
+function addChannel() {
+  const value = el.ytInput.value.trim();
+  if (!value) return;
+  const channels = settings?.youtubeChannels || [];
+  if (!channels.includes(value)) updateSettings({ youtubeChannels: [...channels, value] });
+  el.ytInput.value = '';
+}
+
+document.querySelector('[data-action="yt-add"]').addEventListener('click', addChannel);
+el.ytInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') addChannel();
 });
 
 // Live updates: poll for the countdown + listen for background broadcasts.
