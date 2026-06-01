@@ -86,30 +86,31 @@ machine.registerOnEvent(async (event) => {
 
 async function boot() {
   await ensureSettings();
-  await machine.init();
+  await machine.init(); // restores the persisted session from storage
   await reapplyBlocking(); // ensure rules match restored state on every worker wake
 }
 
-browser.runtime.onInstalled.addListener(async (details) => {
-  console.log('[Lockd] installed/updated:', details.reason);
-  await boot();
-});
+// MV3 suspends the service worker aggressively. On every cold wake the module
+// re-evaluates with a fresh (idle) in-memory session, so we must finish restoring
+// from storage BEFORE answering any message — otherwise a GET_STATE that wakes the
+// worker would reply "idle" and a running session would look deleted.
+let readyPromise = null;
+function ready() {
+  if (!readyPromise) readyPromise = boot().catch((err) => console.error('[Lockd] boot failed', err));
+  return readyPromise;
+}
 
-browser.runtime.onStartup?.addListener(async () => {
-  console.log('[Lockd] browser startup');
-  await boot();
-});
+// Message types this background handles (used to decide whether to keep the channel open).
+const HANDLED = new Set([
+  MSG.GET_STATE, MSG.START_SESSION, MSG.PAUSE, MSG.RESUME, MSG.STOP, MSG.SKIP,
+  MSG.EXTEND_BREAK, MSG.TOGGLE_ALWAYS_ON, MSG.TICK, MSG.GET_SETTINGS,
+  MSG.UPDATE_SETTINGS, MSG.GET_STATS, MSG.BLOCKED_HIT,
+]);
 
-browser.alarms.onAlarm.addListener(async (alarm) => {
-  if (alarm.name === ALARM_PHASE) {
-    await machine.recover();
-  }
-});
-
-browser.runtime.onMessage.addListener((message) => {
-  switch (message?.type) {
+function dispatch(message) {
+  switch (message.type) {
     case MSG.GET_STATE:
-      return Promise.resolve(machine.getSnapshot());
+      return machine.getSnapshot();
     case MSG.START_SESSION:
       return machine.startSession(message.config);
     case MSG.PAUSE:
@@ -146,6 +147,30 @@ browser.runtime.onMessage.addListener((message) => {
     default:
       return undefined;
   }
+}
+
+browser.runtime.onInstalled.addListener(async (details) => {
+  console.log('[Lockd] installed/updated:', details.reason);
+  await ready();
 });
 
-boot().catch((err) => console.error('[Lockd] boot failed', err));
+browser.runtime.onStartup?.addListener(async () => {
+  console.log('[Lockd] browser startup');
+  await ready();
+});
+
+browser.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === ALARM_PHASE) {
+    await ready();
+    await machine.recover();
+  }
+});
+
+// Every handled message waits for restore to complete before being served.
+browser.runtime.onMessage.addListener((message) => {
+  if (!message || !HANDLED.has(message.type)) return undefined;
+  return ready().then(() => dispatch(message));
+});
+
+// Kick off restore at module load so it's usually done before the first message.
+ready();
