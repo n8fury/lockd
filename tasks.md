@@ -17,19 +17,20 @@
 
 ---
 
-## Phase 0 — Foundation & "hello, loadable extension"
+## Phase 0 — Foundation & "hello, loadable extension" ✅ built (pending browser load-test)
 Goal: an empty-but-real extension that loads in both browsers.
 
-- [ ] Decide build tooling (esbuild or Vite) vs. zero-build plain JS — confirm with user.
-- [ ] `package.json` + scripts: `build:chrome`, `build:firefox`, `build` (both), `watch`.
-- [ ] Repo structure (`src/background`, `src/content`, `src/rules`, `src/ui/*`, `src/shared`).
-- [ ] `manifest.base.json` + `manifest.chrome.json` (MV3, service_worker) + `manifest.firefox.json` (MV3, `browser_specific_settings.gecko`, background fallback).
-- [ ] `webextension-polyfill` shim so `browser.*` works on both.
-- [ ] Minimal background service worker that logs "Lockd alive".
-- [ ] Placeholder popup that opens.
-- [ ] Build emits `dist/chrome` and `dist/firefox`.
+- [x] Build tooling decided: **Vite + CRXJS** (Chromium-first; Firefox via CRXJS `browser:'firefox'`).
+- [x] `package.json` + scripts: `build:chrome`, `build:firefox`, `build` (both), `watch:*`.
+- [x] Repo structure (`src/background`, `src/ui/*`, `src/manifest.js`; `content`/`rules`/`shared` added as phases need them).
+- [x] `src/manifest.js` generator → Chrome (MV3 `service_worker`) + Firefox (MV3 `background.scripts` + `browser_specific_settings.gecko`). Verified in emitted manifests.
+- [x] `webextension-polyfill` shim so `browser.*` works on both (bundled into background + popup).
+- [x] Minimal background worker that logs "Lockd alive".
+- [x] Placeholder popup that opens and reads `runtime.getManifest()`.
+- [x] Build emits `dist/chrome` and `dist/firefox` cleanly.
 
 **DoD:** Loads via `chrome://extensions` (unpacked) **and** `about:debugging` (Firefox); popup opens; no console errors.
+> ⏳ Builds are valid MV3 and manifests verified correct. **Needs a manual load-test in each browser** (can't drive a browser from here) before we call Phase 0 fully closed.
 
 ---
 

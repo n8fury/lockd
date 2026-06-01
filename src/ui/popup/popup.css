@@ -1,0 +1,68 @@
+/* Phase 0 placeholder styling. Real theme tokens (CyberX dark / Noteflow light)
+   land in Phase 5 when we port the spec mockups. */
+:root {
+  --bg: #0a0420;
+  --bg-elev: #1a0f3d;
+  --text: #f0eaff;
+  --text-muted: #9b92c9;
+  --text-dim: #6b6299;
+  --violet: #b47cff;
+  --pink: #ff6bcb;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  width: 280px;
+  font-family: system-ui, -apple-system, sans-serif;
+  background:
+    radial-gradient(ellipse 400px 300px at 100% 0%, rgba(180, 124, 255, 0.18), transparent 60%),
+    linear-gradient(160deg, var(--bg-elev), var(--bg));
+  color: var(--text);
+}
+
+.popup {
+  padding: 22px 20px 18px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--violet), var(--pink));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 15px;
+  box-shadow: 0 4px 12px rgba(180, 124, 255, 0.4);
+}
+
+.brand-name {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.status {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}
+
+.hint {
+  font-family: ui-monospace, "Geist Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 0;
+}
